@@ -659,6 +659,20 @@
       });
     }
 
+    function setReqWorkpackageValue(wpSelect, initialWorkpackage){
+      if(!wpSelect) return;
+      var raw = (initialWorkpackage || '').trim();
+      if(!raw){ wpSelect.value=''; return; }
+      var options = [].slice.call(wpSelect.options || []);
+      var direct = options.find(function(o){ return (o.value || '').trim() === raw; });
+      if(direct){ wpSelect.value = direct.value; return; }
+      var byText = options.find(function(o){ return (o.textContent || '').trim() === raw; });
+      if(byText){ wpSelect.value = byText.value; return; }
+      var idFromLabel = raw.split('—')[0].trim();
+      var byId = options.find(function(o){ return (o.value || '').trim() === idFromLabel; });
+      wpSelect.value = byId ? byId.value : '';
+    }
+
     // ===== Requirements UI =====
     function createReqItem(initialType, initialHTML, initialWorkpackage){
       initialType = initialType || 'General';
@@ -693,7 +707,7 @@
 
       buildToolbar(tb);
       refreshWorkpackageOptions();
-      wpSel.value = initialWorkpackage || '';
+      setReqWorkpackageValue(wpSel, initialWorkpackage);
       return wrap;
     }
     function addRequirement(type,html,workpackage){ document.getElementById('reqList').appendChild(createReqItem(type,html,workpackage)); }
@@ -832,24 +846,50 @@
       var archDesc    = sanitize(getHTML('architectureDesc'));
       var notes       = sanitize(getHTML('notes'));
       var deliverables= sanitize(getHTML('deliverables'));
-      var req         = collectRequirements();
-
-      function listBlock(type){
-        if(!req[type].length) return '';
-        var items = req[type].map(function(item){
-          var wp = item.workpackage ? '<div><small><strong>Workpackage:</strong> ' + sanitize(item.workpackage) + '</small></div>' : '';
-          return '<li>'+ wp + sanitize(item.html) +'</li>';
-        }).join('\n');
-        return '<h3 class="h5 mt-3">'+type+'</h3>\n<ul class="ps-3">\n'+items+'\n</ul>';
+      var reqItems = [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
+        return {
+          type: item.querySelector('select').value,
+          workpackage: (item.querySelector('.req-workpackage')||{}).value||'',
+          html: (item.querySelector('.rte').innerHTML||'').trim()
+        };
+      }).filter(function(item){ return item.html; });
+      var workpackages = getWorkpackages();
+      var workpackageGroups = workpackages.map(function(wp, idx){
+        return {
+          key: (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim(),
+          label: getWorkpackageLabel(wp, idx+1),
+          grouped: {'General':[],'Functional':[],'Non-functional':[]}
+        };
+      });
+      var unassigned = { label:'Unassigned', grouped:{'General':[],'Functional':[],'Non-functional':[]} };
+      reqItems.forEach(function(item){
+        var grp = workpackageGroups.find(function(wp){ return wp.key === item.workpackage; });
+        if(!grp && item.workpackage){
+          grp = { key:item.workpackage, label:item.workpackage, grouped:{'General':[],'Functional':[],'Non-functional':[]} };
+          workpackageGroups.push(grp);
+        }
+        (grp || unassigned).grouped[item.type].push(item);
+      });
+      function renderTypeList(grouped, type){
+        if(!grouped[type].length) return '';
+        return '<h4 class="h6 mt-2">' + type + '</h4><ul class="ps-3">' + grouped[type].map(function(item){
+          return '<li>' + sanitize(item.html) + '</li>';
+        }).join('') + '</ul>';
       }
+      function renderWorkpackageBlock(wp){
+        var hasAny = wp.grouped.General.length || wp.grouped.Functional.length || wp.grouped['Non-functional'].length;
+        if(!hasAny) return '';
+        return '<div class="mb-3"><h3 class="h5 mt-3">' + sanitize(wp.label) + '</h3>'
+          + renderTypeList(wp.grouped, 'General')
+          + renderTypeList(wp.grouped, 'Functional')
+          + renderTypeList(wp.grouped, 'Non-functional')
+          + '</div>';
+      }
+      var wpBlocks = workpackageGroups.map(renderWorkpackageBlock).join('') + renderWorkpackageBlock(unassigned);
       var reqSectionHTML = [
         '<section class="mb-4">',
         '<h2 class="text-primary h4">Requirements</h2>',
-        (listBlock('General')||''),
-        (listBlock('Functional')||''),
-        (listBlock('Non-functional')||''),
-        (!req.General.length && !req.Functional.length && !req['Non-functional'].length
-          ? '<p class="text-body-secondary"><em>No requirements provided.</em></p>' : ''),
+        (wpBlocks || '<p class="text-body-secondary"><em>No requirements provided.</em></p>'),
         '</section>'
       ].join('\n');
 
