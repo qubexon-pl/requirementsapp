@@ -706,11 +706,14 @@
       wrap.append(row);
 
       buildToolbar(tb);
-      refreshWorkpackageOptions();
-      setReqWorkpackageValue(wpSel, initialWorkpackage);
       return wrap;
     }
-    function addRequirement(type,html,workpackage){ document.getElementById('reqList').appendChild(createReqItem(type,html,workpackage)); }
+    function addRequirement(type,html,workpackage){
+      var item = createReqItem(type,html,workpackage);
+      document.getElementById('reqList').appendChild(item);
+      refreshWorkpackageOptions();
+      setReqWorkpackageValue(item.querySelector('.req-workpackage'), workpackage);
+    }
     document.getElementById('addOne').addEventListener('click',function(){ addRequirement(); });
     document.getElementById('addThree').addEventListener('click',function(){ addRequirement(); addRequirement('Functional'); addRequirement('Non-functional'); });
     document.getElementById('addWorkpackageBtn').addEventListener('click', function(){ addWorkpackage(); });
