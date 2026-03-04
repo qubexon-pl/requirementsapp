@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Requirements Generator — One Column (v9)</title>
+
+  <!-- Bootswatch (Lux) + Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/lux/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- DOCX export library -->
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+
+  <style>
+    .req-item { border-left: 4px solid var(--bs-primary); }
+    .sticky-actions {
+      position: sticky; bottom: 0; z-index: 1020;
+      background: rgba(255,255,255,0.9); backdrop-filter: blur(6px);
+      border-top: 1px dashed var(--bs-border-color);
+    }
+    .small-hint { color: var(--bs-secondary-color); font-size: .9rem; }
+    .section-title { display:flex; align-items:center; gap:.5rem; }
+    .img-preview { max-height: 56px; max-width: 200px; object-fit: contain; }
+    .img-preview-large { max-height: 220px; object-fit: contain; }
+
+    /* RTE styles */
+    .rte { min-height: 120px; border: 1px solid var(--bs-border-color); border-radius: .5rem; padding: .65rem .75rem; background: var(--bs-body-bg); }
+    .rte:focus { outline: 2px solid var(--bs-primary); }
+    .rte[data-placeholder]:empty:before { content: attr(data-placeholder); color: var(--bs-secondary-color); }
+    .rte-toolbar { display:flex; flex-wrap:wrap; gap:.25rem; margin-bottom:.35rem; }
+    .rte-toolbar .btn { padding: .25rem .5rem; }
+
+    /* Doc (export) extras */
+    .doc-toolbar{position:sticky;top:0;z-index:1020;backdrop-filter:blur(6px)}
+    .doc-rte-toolbar{background: rgba(0,0,0,0.04); border-top:1px solid var(--bs-border-color); border-bottom:1px solid var(--bs-border-color);}
+    .logo-img{height:32px;object-fit:contain}
+    .diagram-img{max-height:45vh;object-fit:contain}
+    .metric-label{display:flex;align-items:center;gap:.5rem;color:var(--bs-secondary-color)}
+    .metric-box{min-height:48px;border:2px solid var(--bs-border-color);border-radius:.5rem;padding:.75rem}
+
+    /* Generated doc content look */
+    #content{font-weight:600;}
+    #content h1,#content h2,#content h3,#content h4,#content h5,#content h6{font-weight:700;}
+    #content h1, #content h2, #content h3, #content h4, #content h5, #content h6{
+      color: var(--bs-primary);
+      background: color-mix(in srgb, var(--bs-primary) 12%, transparent);
+      border-left: .4rem solid color-mix(in srgb, var(--bs-primary) 80%, black);
+      padding: .45rem .7rem;
+      border-radius: .5rem;
+      margin-top: 1.25rem;
+    }
+
+    @media print{ .doc-toolbar,.doc-rte-toolbar{display:none !important} body{margin:0} }
+  </style>
+<style>
+    /* ===== Sticky Requirements Toolbar ===== */
+    .req-sticky-toolbar{
+      position: sticky;
+      top: 64px; /* below navbar */
+      z-index: 1020; /* above cards, below navbar */
+      background: var(--bs-body-bg, #fff);
+      padding: .5rem 0;
+      border-bottom: 1px solid var(--bs-border-color, rgba(0,0,0,.1));
+    }
+    .req-sticky-toolbar .btn{
+      white-space: nowrap;
+    }
+</style>
+<style>
+    /* ===== Floating Add Requirement FAB ===== */
+    .fab-add-req{
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 1040;
+      border-radius: 9999px;
+      padding: .9rem 1.1rem;
+      box-shadow: 0 8px 18px rgba(0,0,0,.15);
+    }
+</style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+    <div class="container">
+      <a class="navbar-brand fw-semibold" href="#"><i class="bi bi-diagram-3"></i> Requirements Generator</a>
+      <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+<label class="btn btn-outline-secondary btn-sm mb-0 ms-2" title="Load from JSON (full page)">
+  <input type="file" id="loadJsonInput" accept="application/json,.json" hidden>
+  <i class="bi bi-upload"></i> Load JSON
+</label>
+        <button class="btn btn-danger btn-sm" id="resetStorageBtn" type="button" title="Clear saved data only (localStorage)">
+          <i class="bi bi-trash"></i> Reset Storage
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" id="clearFormBtn" type="button" title="Clear the form (and local copy)">
+          <i class="bi bi-eraser"></i> Clear
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" id="saveFormBtn" type="button" title="Save this form locally">
+          <i class="bi bi-save"></i> Save
+        </button>
+
+        <div class="btn-group">
+          <button class="btn btn-outline-success btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-file-arrow-down"></i> Export
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+      <li><a class="dropdown-item" href="#" id="exportJsonBtn"><i class="bi bi-braces"></i> Export JSON</a></li>
+            <li><a class="dropdown-item" href="#" id="exportDocxBtn"><i class="bi bi-file-earmark-word"></i> Export DOCX</a></li>
+            </ul>
+        </div>
+
+        <button class="btn btn-success btn-sm" id="generateBtn" type="button">
+          <i class="bi bi-filetype-html"></i> Generate &amp; Save HTML
+        </button>
+      </div>
+
+    </div>
+  </nav>
+
+  <main class="container my-4">
+    <div class="row g-4">
+      <div class="col-12 col-xxl-10 mx-auto">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="section-title">
+                <i class="bi bi-clipboard-check"></i>
+                <span class="fw-semibold">Project Details</span>
+              </div>
+              <span class="small-hint"><i class="bi bi-hdd"></i> Form auto-saves locally</span>
+            </div>
+          </div>
+
+          <div class="card-body">
+
+            <div class="mb-3">
+              <label for="projectName" class="form-label">Project Name</label>
+              <input type="text" class="form-control" id="projectName" placeholder="e.g., MobileParts - Microsoft Fabric PoV" />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Company Description</label>
+              <div class="rte-toolbar" data-target="companyDesc"></div>
+              <div id="companyDesc" class="rte" contenteditable="true" data-placeholder="Who you are, what you do, industry, size, context..."></div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="logoInput" class="form-label">Logo (top-left in generated doc)</label>
+                <input type="file" class="form-control" id="logoInput" accept="image/*">
+                <div class="form-text">Pick your company logo (PNG/SVG/JPG).</div>
+                <div class="mt-2"><img id="logoPreview" class="img-preview d-none" alt="Logo preview"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="diagramInput" class="form-label">Architecture Diagram</label>
+                <input type="file" class="form-control" id="diagramInput" accept="image/*">
+                <div class="form-text">Pick your architecture image.</div>
+                <div class="mt-2"><img id="diagramPreview" class="img-preview-large d-none" alt="Diagram preview"></div>
+              </div>
+            </div>
+
+            <!-- Architecture Description -->
+            <div class="mt-3">
+              <label class="form-label">Architecture Description</label>
+              <div class="rte-toolbar" data-target="architectureDesc"></div>
+              <div id="architectureDesc" class="rte" contenteditable="true" data-placeholder="Describe the architecture components and data flow..."></div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Time & Cost row -->
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Timeline (weeks)</label>
+                <div class="rte-toolbar" data-target="timeline"></div>
+                <div id="timeline" class="rte" contenteditable="true" data-placeholder="e.g., 6-8 weeks"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Cost (hours)</label>
+                <div class="rte-toolbar" data-target="cost"></div>
+                <div id="cost" class="rte" contenteditable="true" data-placeholder="e.g., 320-400 hours"></div>
+              </div>
+            </div>
+
+            <!-- Time & Cost Description UNDER the row -->
+            <div class="mt-3">
+              <label class="form-label">Time &amp; Cost Description</label>
+              <div class="rte-toolbar" data-target="timeCostDesc"></div>
+              <div id="timeCostDesc" class="rte" contenteditable="true" data-placeholder="Explain how timeline and cost were estimated..."></div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Stakeholders</label>
+              <div class="rte-toolbar" data-target="stakeholders"></div>
+              <div id="stakeholders" class="rte" contenteditable="true" data-placeholder="List key stakeholders..."></div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Goals &amp; Objectives</label>
+              <div class="rte-toolbar" data-target="goals"></div>
+              <div id="goals" class="rte" contenteditable="true" data-placeholder="What are the goals of this project?"></div>
+            </div>
+
+            <!-- Requirements -->
+            <div class="border rounded-3 p-3 mt-3">
+              
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements</h5><div class="btn-group ms-auto" role="group">
+                  <button type="button" class="btn btn-outline-secondary" id="addThree"><i class="bi bi-plus-lg"></i> Add 3 blank requirements</button>
+                  <button type="button" class="btn btn-primary" id="addOne"><i class="bi bi-plus-square"></i> Add requirement</button>
+                </div>
+              </div>
+
+              <div id="reqList" class="mt-3"></div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Constraints</label>
+              <div class="rte-toolbar" data-target="constraints"></div>
+              <div id="constraints" class="rte" contenteditable="true" data-placeholder="Time, technology, budget, compliance, etc."></div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Assumptions</label>
+              <div class="rte-toolbar" data-target="assumptions"></div>
+              <div id="assumptions" class="rte" contenteditable="true" data-placeholder="What assumptions are you making?"></div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Out of Scope</label>
+              <div class="rte-toolbar" data-target="outOfScope"></div>
+              <div id="outOfScope" class="rte" contenteditable="true" data-placeholder="What is explicitly not included?"></div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Deliverables</label>
+              <div class="rte-toolbar" data-target="deliverables"></div>
+              <div id="deliverables" class="rte" contenteditable="true" data-placeholder="List the deliverables (e.g., HLD, Fabric artifacts, best practices guide, post-implementation docs)..."></div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Additional Notes</label>
+              <div class="rte-toolbar" data-target="notes"></div>
+              <div id="notes" class="rte" contenteditable="true" data-placeholder="Any other context or considerations..."></div>
+            </div>
+
+          </div>
+
+          
+            </div>
+          </div>
+        </div>
+
+        <p class="text-center text-body-secondary mt-3 small">
+          <i class="bi bi-shield-lock"></i> Your data stays in your browser via <code>localStorage</code>.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Inert template for the generated document (ONE COLUMN) -->
+  <template id="docTemplate">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[[PROJECT_NAME_ESC]] - Requirements</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/lux/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    #editableRoot[contenteditable="true"]{outline:2px dashed var(--bs-border-color);border-radius:.5rem;padding:.5rem}
+    .doc-toolbar{position:sticky;top:0;z-index:1020;backdrop-filter:blur(6px)}
+    .doc-rte-toolbar{background: rgba(0,0,0,0.04); border-top:1px solid var(--bs-border-color); border-bottom:1px solid var(--bs-border-color);}
+    .rte-toolbar .btn { padding:.25rem .5rem; }
+    .logo-img{height:32px;object-fit:contain}
+    .diagram-img{max-height:45vh;object-fit:contain}
+    .metric-label{display:flex;align-items:center;gap:.5rem;color:var(--bs-secondary-color)}
+    .metric-box{min-height:48px;border:2px solid var(--bs-border-color);border-radius:.5rem;padding:.75rem}
+    #content{font-weight:600;}
+    #content h1,#content h2,#content h3,#content h4,#content h5,#content h6{font-weight:700;}
+    #content h1, #content h2, #content h3, #content h4, #content h5, #content h6{
+      color: var(--bs-primary);
+      background: color-mix(in srgb, var(--bs-primary) 12%, transparent);
+      border-left: .4rem solid color-mix(in srgb, var(--bs-primary) 80%, black);
+      padding: .45rem .7rem;
+      border-radius: .5rem;
+      margin-top: 1.25rem;
+    }
+    @media print{ .doc-toolbar,.doc-rte-toolbar{display:none !important} body{margin:0} }
+  </style>
+<style>
+    /* ===== Sticky Requirements Toolbar ===== */
+    .req-sticky-toolbar{
+      position: sticky;
+      top: 64px; /* below navbar */
+      z-index: 1020; /* above cards, below navbar */
+      background: var(--bs-body-bg, #fff);
+      padding: .5rem 0;
+      border-bottom: 1px solid var(--bs-border-color, rgba(0,0,0,.1));
+    }
+    .req-sticky-toolbar .btn{
+      white-space: nowrap;
+    }
+</style>
+<style>
+    /* ===== Floating Add Requirement FAB ===== */
+    .fab-add-req{
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 1040;
+      border-radius: 9999px;
+      padding: .9rem 1.1rem;
+      box-shadow: 0 8px 18px rgba(0,0,0,.15);
+    }
+</style>
+</head>
+<body>
+  <nav class="navbar bg-dark navbar-dark doc-toolbar">
+    <div class="container d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <img class="logo-img" src="[[LOGO_DATA_URL]]" alt="Logo" onerror="this.style.display='none'">
+        <span class="navbar-brand mb-0 h1">[[PROJECT_NAME_ESC]]</span>
+      </div>
+      <div class="btn-group">
+        <button id="editBtn" type="button" class="btn btn-outline-light"><i class="bi bi-pencil-square"></i> Edit</button>
+        <button id="saveBtn" type="button" class="btn btn-outline-light"><i class="bi bi-save"></i> Save</button>
+        <button id="pdfBtn" type="button" class="btn btn-outline-light"><i class="bi bi-filetype-pdf"></i> Save as PDF</button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="docRteBar" class="doc-rte-toolbar py-2 d-none">
+    <div class="container">
+      <div class="rte-toolbar" data-target="editableRoot"></div>
+    </div>
+  </div>
+
+  <main class="container py-4">
+    <div id="editableRoot" contenteditable="false">
+      <div id="content">
+        <header class="mb-4"><h1 class="h3 text-primary">[[PROJECT_NAME_ESC]]</h1></header>
+        <section class="mb-4"><h2 class="text-primary h4">Company Description</h2><div>[[COMPANY_DESC_HTML]]</div></section>
+        <section class="mb-4"><h2 class="text-primary h4">Stakeholders</h2><div>[[STAKEHOLDERS_HTML]]</div></section>
+        <section class="mb-4"><h2 class="text-primary h4">Goals &amp; Objectives</h2><div>[[GOALS_HTML]]</div></section>
+
+        <!-- Project Architecture placed directly after Goals & Objectives -->
+        <section class="mb-4">
+          <h2 class="text-primary h4">Project Architecture</h2>
+          <div class="mb-3 text-center">
+            <img class="diagram-img img-fluid" src="[[DIAGRAM_DATA_URL]]" alt="Architecture diagram" onerror="this.style.display='none'">
+          </div>
+          <div class="mb-2">
+            <strong>Description</strong>
+            <div>[[ARCH_DESC_HTML]]</div>
+          </div>
+        </section>
+
+        [[REQS_SECTION_HTML]]
+
+        <section class="mb-4"><h2 class="text-primary h4">Constraints</h2><div>[[CONSTRAINTS_HTML]]</div></section>
+        <section class="mb-4"><h2 class="text-primary h4">Assumptions</h2><div>[[ASSUMPTIONS_HTML]]</div></section>
+        <section class="mb-4"><h2 class="text-primary h4">Out of Scope</h2><div>[[OUTOFSCOPE_HTML]]</div></section>
+
+        <section class="mb-4">
+          <h2 class="text-primary h4">Time &amp; Cost</h2>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="metric-label mb-2"><i class="bi bi-calendar-week fs-5"></i><span>Timeline (weeks)</span></div>
+              <div class="metric-box" data-editable="true">[[TIMELINE_HTML]]</div>
+            </div>
+            <div class="col-md-6">
+              <div class="metric-label mb-2"><i class="bi bi-stopwatch fs-5"></i><span>Cost (hours)</span></div>
+              <div class="metric-box" data-editable="true">[[COST_HTML]]</div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <strong>Description</strong>
+            <div>[[TIMECOST_DESC_HTML]]</div>
+          </div>
+        </section>
+
+        <section class="mb-4"><h2 class="text-primary h4">Deliverables</h2><div>[[DELIVERABLES_HTML]]</div></section>
+        <section class="mb-4"><h2 class="text-primary h4">Additional Notes</h2><div>[[NOTES_HTML]]</div></section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+  (function(){
+    // Simple RTE toolbar for the document
+    function buildToolbar(container){
+      var targetId = container.getAttribute('data-target');
+      var html = ''
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="bold" title="Bold"><i class="bi bi-type-bold"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="italic" title="Italic"><i class="bi bi-type-italic"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="underline" title="Underline"><i class="bi bi-type-underline"></i></button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="insertUnorderedList" title="Bulleted list"><i class="bi bi-list-ul"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="insertOrderedList" title="Numbered list"><i class="bi bi-list-ol"></i></button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="formatBlock" data-value="H2" title="Heading 2">H2</button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="formatBlock" data-value="H3" title="Heading 3">H3</button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="formatBlock" data-value="P" title="Paragraph">P</button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyLeft" title="Align left"><i class="bi bi-text-left"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyCenter" title="Align center"><i class="bi bi-text-center"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyRight" title="Align right"><i class="bi bi-text-right"></i></button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="undo" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="redo" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="removeFormat" title="Clear formatting"><i class="bi bi-eraser"></i></button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="createLink" title="Insert link"><i class="bi bi-link-45deg"></i></button>'
+        + '</div>';
+      container.innerHTML = html;
+      container.addEventListener('click', function(e){
+        var btn = e.target.closest('button'); if(!btn) return;
+        var cmd = btn.getAttribute('data-cmd'); var val = btn.getAttribute('data-value') || null;
+        var target = document.getElementById(targetId);
+        if(!target){ return; }
+        target.focus();
+        if(cmd === 'createLink'){
+          var url = prompt('Enter URL'); if(url){ document.execCommand('createLink', false, url); }
+          return;
+        }
+        if(cmd === 'formatBlock'){
+          document.execCommand('formatBlock', false, val);
+          return;
+        }
+        document.execCommand(cmd, false, val);
+      });
+    }
+
+    var bars = document.querySelectorAll('.rte-toolbar');
+    bars.forEach(buildToolbar);
+
+    var brand = document.querySelector('.navbar-brand');
+    var pname = brand ? brand.textContent : (document.title || 'Project');
+    var KEY = 'reqdoc:' + pname.replace(/\s+/g,'_') + ':bootstrap:rte:onecol:v10';
+    var root = document.getElementById('editableRoot');
+    var editBtn = document.getElementById('editBtn');
+    var saveBtn = document.getElementById('saveBtn');
+    var pdfBtn  = document.getElementById('pdfBtn');
+    var docRteBar = document.getElementById('docRteBar');
+    var saved = localStorage.getItem(KEY);
+    if (saved) { root.innerHTML = saved; }
+
+    function setEditable(on){
+      var ed = root.querySelectorAll('[data-editable="true"], #content');
+      for (var i=0;i<ed.length;i++){ ed[i].setAttribute('contenteditable', on ? 'true' : 'false'); }
+      root.setAttribute('contenteditable', on ? 'true' : 'false');
+      docRteBar.classList.toggle('d-none', !on);
+    }
+
+    editBtn.addEventListener('click', function(){
+      var on = root.getAttribute('contenteditable') === 'true';
+      setEditable(!on);
+      editBtn.innerHTML = on ? '<i class="bi bi-pencil-square"></i> Edit' : '<i class="bi bi-check2-square"></i> Stop Editing';
+    });
+    saveBtn.addEventListener('click', function(){ localStorage.setItem(KEY, root.innerHTML); alert('Saved!'); });
+    pdfBtn.addEventListener('click', function(){ window.print(); });
+    window.addEventListener('beforeunload', function(){ localStorage.setItem(KEY, root.innerHTML); });
+  })();
+  
+    // Export / Import (Full CSV)
+    document.getElementById('exportCsvBtn').addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
+    document.getElementById('loadCsvInput').addEventListener('change', function(e){ if(e.target.files && e.target.files[0]) loadCsvFullFromFile(e.target.files[0]); });
+
+
+    // Export / Import (Full CSV)
+    var exportCsvBtn = document.getElementById('exportCsvBtn');
+    if (exportCsvBtn){
+      exportCsvBtn.addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
+    }
+    var loadCsvInput = document.getElementById('loadCsvInput');
+    if (loadCsvInput){
+      loadCsvInput.addEventListener('change', function(e){ if(e.target.files && e.target.files[0]) loadCsvFullFromFile(e.target.files[0]); });
+    }
+    // FAB add requirement
+    var fab = document.getElementById('fabAddRequirement');
+    if (fab){
+      fab.addEventListener('click', function(){ if (typeof addRequirement === 'function') addRequirement(); });
+    }
+
+</script></body>
+</html>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    /* ===== RTE Tooling (generator page) ===== */
+    function buildToolbar(container){
+      var targetId = container.getAttribute('data-target');
+      var html = ''
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="bold" title="Bold"><i class="bi bi-type-bold"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="italic" title="Italic"><i class="bi bi-type-italic"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="underline" title="Underline"><i class="bi bi-type-underline"></i></button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="insertUnorderedList" title="Bulleted list"><i class="bi bi-list-ul"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="insertOrderedList" title="Numbered list"><i class="bi bi-list-ol"></i></button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="formatBlock" data-value="H2" title="Heading 2">H2</button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="formatBlock" data-value="H3" title="Heading 3">H3</button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="formatBlock" data-value="P" title="Paragraph">P</button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyLeft" title="Align left"><i class="bi bi-text-left"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyCenter" title="Align center"><i class="bi bi-text-center"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyRight" title="Align right"><i class="bi bi-text-right"></i></button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="undo" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="redo" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="removeFormat" title="Clear formatting"><i class="bi bi-eraser"></i></button>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="createLink" title="Insert link"><i class="bi bi-link-45deg"></i></button>'
+        + '</div>';
+      container.innerHTML = html;
+      container.addEventListener('click', function(e){
+        var btn = e.target.closest('button'); if(!btn) return;
+        var cmd = btn.getAttribute('data-cmd'); var val = btn.getAttribute('data-value') || null;
+        var target = document.getElementById(targetId);
+        if(!target){ return; }
+        target.focus();
+        if(cmd === 'createLink'){
+          var url = prompt('Enter URL'); if(url){ document.execCommand('createLink', false, url); }
+          return;
+        }
+        if(cmd === 'formatBlock'){
+          document.execCommand('formatBlock', false, val);
+          return;
+        }
+        document.execCommand(cmd, false, val);
+      });
+    }
+
+    function initRTEs(){
+      document.querySelectorAll('.rte-toolbar').forEach(buildToolbar);
+    }
+
+    // ===== Utilities =====
+    var TYPES = ['General','Functional','Non-functional'];
+    var FORM_STORAGE_KEY = 'reqgen:bootstrap:rte:onecol:v10'; // new namespace
+
+    function readFileAsDataURL(file){
+      return new Promise(function(resolve,reject){
+        var r=new FileReader();
+        r.onload=function(){resolve(r.result)};
+        r.onerror=reject;
+        r.readAsDataURL(file);
+      });
+    }
+
+    // ===== Requirements UI =====
+    function createReqItem(initialType, initialHTML){
+      initialType = initialType || 'General';
+      initialHTML = initialHTML || '';
+      var wrap=document.createElement('div');
+      wrap.className='req-item bg-body-tertiary rounded-3 p-3 mb-2';
+      var row=document.createElement('div'); row.className='row g-2 align-items-start';
+
+      var colType=document.createElement('div'); colType.className='col-12 col-md-3';
+      var sel=document.createElement('select'); sel.className='form-select';
+      TYPES.forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; if(t===initialType)o.selected=true; sel.appendChild(o); });
+      colType.appendChild(sel);
+
+      var colText=document.createElement('div'); colText.className='col-12 col-md-8';
+      var tb=document.createElement('div'); tb.className='rte-toolbar'; tb.setAttribute('data-target', 'rte_' + Math.random().toString(36).slice(2));
+      var ed=document.createElement('div'); ed.className='rte'; ed.setAttribute('id', tb.getAttribute('data-target')); ed.setAttribute('contenteditable','true'); ed.setAttribute('data-placeholder','Describe the requirement...');
+      ed.innerHTML = initialHTML;
+      colText.append(tb, ed);
+
+      var colRem=document.createElement('div'); colRem.className='col-12 col-md-1 d-grid';
+      var btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-outline-danger'; btn.innerHTML='<i class="bi bi-x-lg"></i>';
+      btn.addEventListener('click',function(){ wrap.remove(); });
+      colRem.appendChild(btn);
+
+      row.append(colType,colText,colRem);
+      wrap.append(row);
+
+      buildToolbar(tb);
+      return wrap;
+    }
+    function addRequirement(type,html){ document.getElementById('reqList').appendChild(createReqItem(type,html)); }
+    document.getElementById('addOne').addEventListener('click',function(){ addRequirement(); });
+    document.getElementById('addThree').addEventListener('click',function(){ addRequirement(); addRequirement('Functional'); addRequirement('Non-functional'); });
+
+    function collectRequirements(){
+      var items=[].slice.call(document.querySelectorAll('.req-item'));
+      var grouped={'General':[],'Functional':[],'Non-functional':[]};
+      items.forEach(function(item){
+        var type=item.querySelector('select').value;
+        var html=(item.querySelector('.rte').innerHTML||'').trim();
+        if(html) grouped[type].push(html);
+      });
+      return grouped;
+    }
+
+    // ===== Image previews =====
+    var logoDataUrl=''; var diagramDataUrl='';
+    document.getElementById('logoInput').addEventListener('change',async function(e){
+      var f=e.target.files&&e.target.files[0]; if(!f)return;
+      logoDataUrl=await readFileAsDataURL(f);
+      var p=document.getElementById('logoPreview'); p.src=logoDataUrl; p.classList.remove('d-none');
+    });
+    document.getElementById('diagramInput').addEventListener('change',async function(e){
+      var f=e.target.files&&e.target.files[0]; if(!f)return;
+      diagramDataUrl=await readFileAsDataURL(f);
+      var p=document.getElementById('diagramPreview'); p.src=diagramDataUrl; p.classList.remove('d-none');
+    });
+
+    // ===== Form Save / Restore / Clear =====
+    function getHTML(id){ var el=document.getElementById(id); return el ? el.innerHTML : ''; }
+    function setHTML(id, html){ var el=document.getElementById(id); if(el) el.innerHTML = html || ''; }
+
+    function saveForm(){
+      var data={
+        projectName: document.getElementById('projectName').value||'',
+        companyDesc: getHTML('companyDesc'),
+        timeline: getHTML('timeline'),
+        cost: getHTML('cost'),
+        stakeholders: getHTML('stakeholders'),
+        goals: getHTML('goals'),
+        constraints: getHTML('constraints'),
+        assumptions: getHTML('assumptions'),
+        outOfScope: getHTML('outOfScope'),
+        timeCostDesc: getHTML('timeCostDesc'),
+        architectureDesc: getHTML('architectureDesc'),
+        deliverables: getHTML('deliverables'),
+        notes: getHTML('notes'),
+        logo: logoDataUrl||'',
+        diagram: diagramDataUrl||'',
+        reqs: [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
+          return {type:item.querySelector('select').value, html:item.querySelector('.rte').innerHTML||''};
+        })
+      };
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
+      showToast('Form saved locally.');
+    }
+
+    function restoreForm(){
+      var raw=localStorage.getItem(FORM_STORAGE_KEY);
+      if(!raw){ addRequirement(); return; }
+      try{
+        var d=JSON.parse(raw);
+        document.getElementById('projectName').value=d.projectName||'';
+        setHTML('companyDesc', d.companyDesc||'');
+        setHTML('timeline', d.timeline||'');
+        setHTML('cost', d.cost||'');
+        setHTML('stakeholders', d.stakeholders||'');
+        setHTML('goals', d.goals||'');
+        setHTML('constraints', d.constraints||'');
+        setHTML('assumptions', d.assumptions||'');
+        setHTML('outOfScope', d.outOfScope||'');
+        setHTML('timeCostDesc', d.timeCostDesc||'');
+        setHTML('architectureDesc', d.architectureDesc||'');
+        setHTML('deliverables', d.deliverables||'');
+        setHTML('notes', d.notes||'');
+        document.getElementById('reqList').innerHTML='';
+        if(Array.isArray(d.reqs)&&d.reqs.length){ d.reqs.forEach(function(r){ addRequirement(r.type||'General', r.html||''); }); } else { addRequirement(); }
+        logoDataUrl=d.logo||''; diagramDataUrl=d.diagram||'';
+        if(logoDataUrl){ var lp=document.getElementById('logoPreview'); lp.src=logoDataUrl; lp.classList.remove('d-none'); }
+        if(diagramDataUrl){ var dp=document.getElementById('diagramPreview'); dp.src=diagramDataUrl; dp.classList.remove('d-none'); }
+      }catch(e){ addRequirement(); }
+    }
+
+    function clearForm(){
+      if(!confirm('Clear all form fields and remove the saved copy?')) return;
+      localStorage.removeItem(FORM_STORAGE_KEY);
+      document.getElementById('projectName').value='';
+      ['companyDesc','timeline','cost','stakeholders','goals','constraints','assumptions','outOfScope','timeCostDesc','architectureDesc','deliverables','notes'].forEach(function(id){ setHTML(id,''); });
+      document.getElementById('reqList').innerHTML=''; addRequirement();
+      document.getElementById('logoPreview').classList.add('d-none');
+      document.getElementById('diagramPreview').classList.add('d-none');
+      logoDataUrl=''; diagramDataUrl='';
+      showToast('Form cleared.');
+    }
+
+    document.getElementById('saveFormBtn').addEventListener('click', saveForm);
+    document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+    document.getElementById('resetStorageBtn').addEventListener('click', function(){
+      if(!confirm('Clear saved local storage data for this form? This will not wipe the current page fields.')) return;
+      localStorage.removeItem(FORM_STORAGE_KEY);
+      alert('Local storage reset. Reload page to start fresh.');
+    });
+    window.addEventListener('beforeunload', saveForm);
+
+    // ===== Generator using <template> =====
+    function generateHTML(){
+      function sanitize(html){ return (html || '').replace(/\n/g, '<br>'); }
+
+      var projectName = (document.getElementById('projectName').value || 'Project').trim();
+      var companyDesc = sanitize(getHTML('companyDesc'));
+      var timeline    = sanitize(getHTML('timeline'));
+      var cost        = sanitize(getHTML('cost'));
+      var stakeholders= sanitize(getHTML('stakeholders'));
+      var goals       = sanitize(getHTML('goals'));
+      var constraints = sanitize(getHTML('constraints'));
+      var assumptions = sanitize(getHTML('assumptions'));
+      var outOfScope  = sanitize(getHTML('outOfScope'));
+      var timeCostDesc= sanitize(getHTML('timeCostDesc'));
+      var archDesc    = sanitize(getHTML('architectureDesc'));
+      var notes       = sanitize(getHTML('notes'));
+      var deliverables= sanitize(getHTML('deliverables'));
+      var req         = collectRequirements();
+
+      function listBlock(type){
+        if(!req[type].length) return '';
+        var items = req[type].map(function(html){
+          return '<li>'+ sanitize(html) +'</li>';
+        }).join('\n');
+        return '<h3 class="h5 mt-3">'+type+'</h3>\n<ul class="ps-3">\n'+items+'\n</ul>';
+      }
+      var reqSectionHTML = [
+        '<section class="mb-4">',
+        '<h2 class="text-primary h4">Requirements</h2>',
+        (listBlock('General')||''),
+        (listBlock('Functional')||''),
+        (listBlock('Non-functional')||''),
+        (!req.General.length && !req.Functional.length && !req['Non-functional'].length
+          ? '<p class="text-body-secondary"><em>No requirements provided.</em></p>' : ''),
+        '</section>'
+      ].join('\n');
+
+      var tmpl = document.getElementById('docTemplate').innerHTML;
+
+      var projectNameEsc = projectName.replace(/[&<>"]/g, function(s){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s];});
+      var html = tmpl
+        .split('[[PROJECT_NAME_ESC]]').join(projectNameEsc)
+        .replace('[[COMPANY_DESC_HTML]]', companyDesc)
+        .replace('[[STAKEHOLDERS_HTML]]', stakeholders)
+        .replace('[[GOALS_HTML]]', goals)
+        .replace('[[REQS_SECTION_HTML]]', reqSectionHTML)
+        .replace('[[CONSTRAINTS_HTML]]', constraints)
+        .replace('[[ASSUMPTIONS_HTML]]', assumptions)
+        .replace('[[OUTOFSCOPE_HTML]]', outOfScope)
+        .replace('[[TIMELINE_HTML]]', timeline)
+        .replace('[[COST_HTML]]', cost)
+        .replace('[[TIMECOST_DESC_HTML]]', timeCostDesc)
+        .replace('[[ARCH_DESC_HTML]]', archDesc)
+        .replace('[[DELIVERABLES_HTML]]', deliverables)
+        .replace('[[NOTES_HTML]]', notes)
+        .replace('[[LOGO_DATA_URL]]', logoDataUrl || '')
+        .replace('[[DIAGRAM_DATA_URL]]', diagramDataUrl || '');
+
+      var safeName = projectName.replace(/\s+/g,'_');
+      var blob = new Blob([html], {type:'text/html'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = safeName + '_Requirements_ONE_COLUMN.html';
+      a.click();
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', generateHTML);
+
+    // ===== DOCX Export =====
+    async function exportDocx(){
+      function htmlToText(html){
+        if(!html) return '';
+        html = html.replace(/<\s*br\s*\/?>/gi, '\n')
+                   .replace(/<\/p>/gi, '\n')
+                   .replace(/<\/li>/gi, '\n- ')
+                   .replace(/<\/?ul>|<\/?ol>|<\/?strong>|<\/?em>|<\/?b>|<\/?i>|<\/?u>|<\/?span>|<\/?div>|<\/?p>|<\/?h\d>|<\/?section>|<\/?figure>|<\/?img[^>]*>/gi, '');
+        html = html.replace(/<[^>]+>/g, '');
+        return html.replace(/\n{3,}/g, '\n\n').trim();
+      }
+
+      var projectName = (document.getElementById('projectName').value || 'Project').trim();
+
+      var fields = [
+        ['Company Description', htmlToText(getHTML('companyDesc'))],
+        ['Stakeholders',        htmlToText(getHTML('stakeholders'))],
+        ['Goals & Objectives',  htmlToText(getHTML('goals'))],
+        ['Project Architecture - Description', htmlToText(getHTML('architectureDesc'))],
+      ];
+
+      var req = collectRequirements();
+      function joinList(arr){ return (arr||[]).map(function(x,i){ return (i+1)+'. '+htmlToText(x); }).join('\n'); }
+      var reqText = '';
+      if(req.General.length)       reqText += 'General:\n' + joinList(req.General) + '\n\n';
+      if(req.Functional.length)    reqText += 'Functional:\n' + joinList(req.Functional) + '\n\n';
+      if(req['Non-functional'].length) reqText += 'Non-functional:\n' + joinList(req['Non-functional']) + '\n\n';
+      fields.push(['Requirements', reqText.trim() || '—']);
+
+      fields.push(['Constraints',  htmlToText(getHTML('constraints'))]);
+      fields.push(['Assumptions',  htmlToText(getHTML('assumptions'))]);
+      fields.push(['Out of Scope', htmlToText(getHTML('outOfScope'))]);
+
+      fields.push(['Timeline (weeks)', htmlToText(getHTML('timeline'))]);
+      fields.push(['Cost (hours)',     htmlToText(getHTML('cost'))]);
+      fields.push(['Time & Cost - Description', htmlToText(getHTML('timeCostDesc'))]);
+
+      fields.push(['Deliverables', htmlToText(getHTML('deliverables'))]);
+      fields.push(['Additional Notes', htmlToText(getHTML('notes'))]);
+
+      const { Document, Packer, Paragraph, HeadingLevel } = window.docx;
+
+      const paragraphs = [];
+      paragraphs.push(new Paragraph({ text: projectName, heading: HeadingLevel.TITLE }));
+
+      for (const [title, body] of fields){
+        paragraphs.push(new Paragraph({ text: title, heading: HeadingLevel.HEADING_2 }));
+        if (body && body.length){
+          body.split('\n').forEach(line => {
+            paragraphs.push(new Paragraph({ text: line }));
+          });
+        } else {
+          paragraphs.push(new Paragraph({ text: '—' }));
+        }
+      }
+
+      const doc = new Document({
+        sections: [ { properties: {}, children: paragraphs } ]
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (projectName.replace(/\s+/g,'_') || 'Project') + '_Requirements.docx';
+      a.click();
+    }
+    document.getElementById('exportDocxBtn').addEventListener('click', function(e){ e.preventDefault(); exportDocx(); });
+// ===== CSV Export/Import (Full Page) =====
+    function escapeCsvField(v){
+      v = (v ?? '').toString().replace(/\r?\n/g, '\\n');
+      if (/[",\n]/.test(v)) {
+        v = '"' + v.replace(/"/g, '""') + '"';
+      }
+      return v;
+    }
+    function unescapeCsvField(v){
+      if (v.startsWith('"') && v.endsWith('"')) {
+        v = v.slice(1, -1).replace(/""/g, '"');
+      }
+      return v.replace(/\\n/g, '\n');
+    }
+    function buildFullRows(){
+      var rows = [['section','key','value','extra']];
+      // META: all inputs, textareas, selects with an id
+      var fields = document.querySelectorAll('input, textarea, select');
+      fields.forEach(function(el){
+        if (!el.id) return;
+        var tag = el.tagName.toLowerCase();
+        var type = (el.getAttribute('type') || '').toLowerCase();
+        var value = '';
+        var extra = '';
+        if (tag === 'select') {
+          if (el.multiple) {
+            var vals = [].slice.call(el.selectedOptions).map(function(o){ return o.value; });
+            value = vals.join(';');
+          } else {
+            value = el.value || '';
+          }
+        } else if (type === 'checkbox') {
+          value = el.checked ? 'true' : 'false';
+          extra = el.value || 'on';
+        } else if (type === 'radio') {
+          if (el.checked) {
+            value = el.value || 'on';
+          } else {
+            return; // skip unchecked radios; importer will set based on checked value
+          }
+        } else {
+          value = el.value || '';
+        }
+        rows.push(['meta', el.id, value, extra]);
+      });
+      // REQUIREMENTS
+      var items = [].slice.call(document.querySelectorAll('.req-item'));
+      items.forEach(function(item, idx){
+        var typeSel = item.querySelector('select');
+        var type = typeSel ? typeSel.value : '';
+        var html = (item.querySelector('.rte') || {}).innerHTML || '';
+        rows.push(['requirement', String(idx), type, html]);
+      });
+      return rows;
+    }
+    function exportCsvFull(){
+      var rows = buildFullRows();
+      var csv = rows.map(function(cols){ return cols.map(escapeCsvField).join(','); }).join('\n');
+      var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      var proj = (document.getElementById('projectName')?.value || 'Project').replace(/\s+/g,'_');
+      a.download = proj + '_full_export.csv';
+      a.click();
+    }
+    function parseCsv(text){
+      var rows = [];
+      var i = 0, field = '', row = [], inQuotes = false;
+      while (i < text.length){
+        var c = text[i];
+        if (inQuotes){
+          if (c === '"'){
+            if (text[i+1] === '"'){ field += '"'; i++; }
+            else { inQuotes = false; }
+          } else {
+            field += c;
+          }
+        } else {
+          if (c === '"'){ inQuotes = true; }
+          else if (c === ','){ row.push(field); field = ''; }
+          else if (c === '\n' || c === '\r'){
+            if (c === '\r' && text[i+1] === '\n') i++;
+            row.push(field); field = '';
+            if (row.length) rows.push(row);
+            row = [];
+          } else {
+            field += c;
+          }
+        }
+        i++;
+      }
+      row.push(field);
+      if (row.length && !(row.length === 1 && row[0] === '')) rows.push(row);
+      return rows;
+    }
+    function loadCsvFullFromFile(file){
+      var r = new FileReader();
+      r.onload = function(){
+        try{
+          var rows = parseCsv(r.result || '');
+          if (!rows.length) { alert('CSV appears empty.'); return; }
+          var header = rows[0].map(function(h){ return h.trim().toLowerCase(); });
+          var idxSection = header.indexOf('section');
+          var idxKey = header.indexOf('key');
+          var idxValue = header.indexOf('value');
+          var idxExtra = header.indexOf('extra');
+          if (idxSection === -1 || idxKey === -1 || idxValue === -1){
+            alert('CSV must include headers: section,key,value[,extra]'); return;
+          }
+          // First, restore meta fields
+          for (var rix=1; rix<rows.length; rix++){
+            var cols = rows[rix];
+            var section = (cols[idxSection] || '').toLowerCase();
+            if (section !== 'meta') continue;
+            var key = cols[idxKey] || '';
+            var val = cols[idxValue] || '';
+            var extra = (idxExtra !== -1 ? cols[idxExtra] : '');
+            var el = document.getElementById(key);
+            if (!el) continue;
+            var tag = el.tagName.toLowerCase();
+            var type = (el.getAttribute('type') || '').toLowerCase();
+            if (tag === 'select'){
+              if (el.multiple){
+                var wanted = (val || '').split(';').map(function(s){ return s.trim(); });
+                [].slice.call(el.options).forEach(function(o){ o.selected = wanted.includes(o.value); });
+              } else {
+                el.value = val;
+              }
+            } else if (type === 'checkbox'){
+              el.checked = (val === 'true');
+            } else if (type === 'radio'){
+              // For radios, we set the one with matching value
+              var group = document.querySelectorAll('input[type="radio"][name="'+el.name+'"]');
+              [].slice.call(group).forEach(function(radio){
+                radio.checked = (radio.value === val);
+              });
+            } else {
+              el.value = val;
+            }
+          }
+          // Then rebuild requirements
+          var reqRows = rows.filter(function(r, idx){
+            if (idx === 0) return false;
+            return (r[idxSection] || '').toLowerCase() === 'requirement';
+          });
+          if (reqRows.length){
+            var list = document.getElementById('reqList');
+            if (list) list.innerHTML = '';
+            // Sort by numeric key/index
+            reqRows.sort(function(a,b){
+              var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
+              return ai - bi;
+            });
+            reqRows.forEach(function(rw){
+              var type = rw[idxValue] || 'General';
+              var html = (idxExtra !== -1 ? rw[idxExtra] : '');
+              if (typeof addRequirement === 'function'){
+                addRequirement(type, html);
+              }
+            });
+          }
+          showToast && showToast('Full page loaded from CSV.');
+        }catch(e){
+          console.error(e);
+          alert('Failed to load CSV: ' + e.message);
+        }
+      };
+      r.readAsText(file);
+    }
+
+    
+    // Shadow when toolbar sticks
+    (function(){
+      var bar = document.querySelector('.req-sticky-toolbar');
+      if (!bar) return;
+      var obs = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.intersectionRatio < 1){
+            bar.style.boxShadow = '0 2px 8px rgba(0,0,0,.07)';
+          } else {
+            bar.style.boxShadow = 'none';
+          }
+        });
+      }, {threshold: [1]});
+      obs.observe(bar);
+    })();
+
+    
+    // ===== Ensure all fields have IDs for stable export/import =====
+    function ensureFieldIds(){
+      var idx = 0;
+      var fields = document.querySelectorAll('input, textarea, select');
+      fields.forEach(function(el){
+        if (!el.id || el.id.trim() === ''){
+          var base = (el.getAttribute('name') || el.getAttribute('data-key') || el.tagName.toLowerCase() + '-' + (el.type || 'text')).replace(/\s+/g,'-');
+          el.id = 'auto_' + base + '_' + (idx++);
+        }
+      });
+    }
+    // Call early
+    ensureFieldIds();
+
+    
+    function buildFullRows(){
+      var rows = [['section','key','value','extra']];
+      ensureFieldIds();
+      var seenRadioNames = new Set();
+      var fields = document.querySelectorAll('input, textarea, select');
+      fields.forEach(function(el){
+        var tag = el.tagName.toLowerCase();
+        var type = (el.getAttribute('type') || '').toLowerCase();
+        var key = el.id;
+        var value = '';
+        var extra = '';
+        if (tag === 'select') {
+          if (el.multiple) {
+            var vals = [].slice.call(el.selectedOptions).map(function(o){ return o.value; });
+            value = vals.join(';');
+          } else {
+            value = el.value || '';
+          }
+        } else if (type === 'checkbox') {
+          value = el.checked ? 'true' : 'false';
+          extra = el.value || 'on';
+        } else if (type === 'radio') {
+          // only capture once per radio group (by name)
+          var name = el.getAttribute('name');
+          if (!name || seenRadioNames.has(name)) return;
+          seenRadioNames.add(name);
+          var checked = document.querySelector('input[type="radio"][name="'+name+'"]:checked');
+          value = checked ? (checked.value || 'on') : '';
+          key = 'radio::' + name; // use group key
+        } else {
+          value = el.value || '';
+        }
+        rows.push(['meta', key, value, extra]);
+      });
+      // REQUIREMENTS
+      var items = [].slice.call(document.querySelectorAll('.req-item'));
+      items.forEach(function(item, idx){
+        var typeSel = item.querySelector('select');
+        var type = typeSel ? typeSel.value : '';
+        var html = (item.querySelector('.rte') || {}).innerHTML || '';
+        rows.push(['requirement', String(idx), type, html]);
+      });
+      return rows;
+    }
+
+    
+    function exportCsvFull(){
+      try{
+        var rows = buildFullRows();
+        var csv = rows.map(function(cols){ return cols.map(escapeCsvField).join(','); }).join('\n');
+        var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        var proj = (document.getElementById('projectName')?.value || 'Project').replace(/\s+/g,'_');
+        a.download = proj + '_full_export.csv';
+        a.click();
+      }catch(e){
+        console.error(e);
+        alert('Export failed: ' + e.message);
+      }
+    }
+
+    
+    function loadCsvFullFromFile(file){
+      var r = new FileReader();
+      r.onload = function(){
+        try{
+          var rows = parseCsv(r.result || '');
+          if (!rows.length) { alert('CSV appears empty.'); return; }
+          var header = rows[0].map(function(h){ return h.trim().toLowerCase(); });
+          var idxSection = header.indexOf('section');
+          var idxKey = header.indexOf('key');
+          var idxValue = header.indexOf('value');
+          var idxExtra = header.indexOf('extra');
+          if (idxSection === -1 || idxKey === -1 || idxValue === -1){
+            alert('CSV must include headers: section,key,value[,extra]'); return;
+          }
+          ensureFieldIds();
+          // First, restore meta fields
+          rows.forEach(function(cols, i){
+            if (i === 0) return; // header
+            var section = (cols[idxSection] || '').toLowerCase();
+            if (section !== 'meta') return;
+            var key = cols[idxKey] || '';
+            var val = cols[idxValue] || '';
+            var extra = (idxExtra !== -1 ? cols[idxExtra] : '');
+            if (key.startsWith('radio::')){
+              var name = key.slice('radio::'.length);
+              var radio = document.querySelector('input[type="radio"][name="'+name+'"][value="'+val+'"]');
+              if (radio) radio.checked = true;
+              return;
+            }
+            var el = document.getElementById(key);
+            if (!el) return;
+            var tag = el.tagName.toLowerCase();
+            var type = (el.getAttribute('type') || '').toLowerCase();
+            if (tag === 'select'){
+              if (el.multiple){
+                var wanted = (val || '').split(';').map(function(s){ return s.trim(); });
+                [].slice.call(el.options).forEach(function(o){ o.selected = wanted.includes(o.value); });
+              } else {
+                el.value = val;
+              }
+            } else if (type === 'checkbox'){
+              el.checked = (val === 'true');
+            } else {
+              el.value = val;
+            }
+          });
+          // Then rebuild requirements
+          var reqRows = rows.filter(function(r, idx){
+            if (idx === 0) return false;
+            return (r[idxSection] || '').toLowerCase() === 'requirement';
+          });
+          if (reqRows.length){
+            var list = document.getElementById('reqList');
+            if (list) list.innerHTML = '';
+            reqRows.sort(function(a,b){
+              var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
+              return ai - bi;
+            });
+            reqRows.forEach(function(rw){
+              var type = rw[idxValue] || 'General';
+              var html = (idxExtra !== -1 ? rw[idxExtra] : '');
+              if (typeof addRequirement === 'function'){
+                addRequirement(type, html);
+              }
+            });
+          }
+          if (typeof showToast === 'function') showToast('Full page loaded from CSV.');
+        }catch(e){
+          console.error(e);
+          alert('Failed to load CSV: ' + e.message);
+        }
+      };
+      r.readAsText(file);
+    }
+
+    // ===== Toast helper =====
+    function showToast(msg){
+      var el = document.getElementById('liveToast');
+      if(!el){
+        el = document.createElement('div');
+        el.id = 'liveToast';
+        el.className = 'toast align-items-center text-bg-primary border-0 position-fixed bottom-0 end-0 m-3';
+        el.setAttribute('role','alert'); el.setAttribute('aria-live','assertive'); el.setAttribute('aria-atomic','true');
+        el.innerHTML = '<div class="d-flex"><div class="toast-body"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>';
+        document.body.appendChild(el);
+      }
+      el.querySelector('.toast-body').textContent = msg;
+      var t = bootstrap.Toast.getOrCreateInstance(el, { delay: 1500 });
+      t.show();
+    }
+
+    // ===== Init =====
+    initRTEs();
+    addRequirement();
+    restoreForm();
+  
+    // Export / Import (Full CSV)
+    document.getElementById('exportCsvBtn').addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
+    document.getElementById('loadCsvInput').addEventListener('change', function(e){ if(e.target.files && e.target.files[0]) loadCsvFullFromFile(e.target.files[0]); });
+
+
+    // Export / Import (Full CSV)
+    var exportCsvBtn = document.getElementById('exportCsvBtn');
+    if (exportCsvBtn){
+      exportCsvBtn.addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
+    }
+    var loadCsvInput = document.getElementById('loadCsvInput');
+    if (loadCsvInput){
+      loadCsvInput.addEventListener('change', function(e){ if(e.target.files && e.target.files[0]) loadCsvFullFromFile(e.target.files[0]); });
+    }
+    // FAB add requirement
+    var fab = document.getElementById('fabAddRequirement');
+    if (fab){
+      fab.addEventListener('click', function(){ if (typeof addRequirement === 'function') addRequirement(); });
+    }
+
+</script>
+<!-- === JSON Export/Import (safe injection) === -->
+<script>
+(function(){
+  function buildFullData(){
+    function g(id){ return document.getElementById(id); }
+    function getInner(id){ return g(id) ? g(id).innerHTML : ''; }
+    var reqItems = Array.prototype.slice.call(document.querySelectorAll('.req-item')).map(function(item){
+      var sel  = item.querySelector('select');
+      var rte  = item.querySelector('.rte');
+      return { type: sel ? sel.value : 'General', html: rte ? rte.innerHTML : '' };
+    });
+    return {
+      projectName: (g('projectName') && g('projectName').value) || '',
+      companyDesc: getInner('companyDesc'),
+      timeline: getInner('timeline'),
+      cost: getInner('cost'),
+      stakeholders: getInner('stakeholders'),
+      goals: getInner('goals'),
+      constraints: getInner('constraints'),
+      assumptions: getInner('assumptions'),
+      outOfScope: getInner('outOfScope'),
+      timeCostDesc: getInner('timeCostDesc'),
+      architectureDesc: getInner('architectureDesc'),
+      deliverables: getInner('deliverables'),
+      notes: getInner('notes'),
+      logo: (typeof window.logoDataUrl !== 'undefined' && window.logoDataUrl) ? window.logoDataUrl : '',
+      diagram: (typeof window.diagramDataUrl !== 'undefined' && window.diagramDataUrl) ? window.diagramDataUrl : '',
+      reqs: reqItems
+    };
+  }
+
+  function applyData(d){
+    function g(id){ return document.getElementById(id); }
+    function setHTML(id, val){ var el = g(id); if (el) el.innerHTML = val || ''; }
+    if (g('projectName')) g('projectName').value = d.projectName || '';
+    setHTML('companyDesc',   d.companyDesc   || '');
+    setHTML('timeline',      d.timeline      || '');
+    setHTML('cost',          d.cost          || '');
+    setHTML('stakeholders',  d.stakeholders  || '');
+    setHTML('goals',         d.goals         || '');
+    setHTML('constraints',   d.constraints   || '');
+    setHTML('assumptions',   d.assumptions   || '');
+    setHTML('outOfScope',    d.outOfScope    || '');
+    setHTML('timeCostDesc',  d.timeCostDesc  || '');
+    setHTML('architectureDesc', d.architectureDesc || '');
+    setHTML('deliverables',  d.deliverables  || '');
+    setHTML('notes',         d.notes         || '');
+    var list = document.getElementById('reqList');
+    if (list) list.innerHTML = '';
+    if (Array.isArray(d.reqs) && d.reqs.length && typeof window.addRequirement === 'function'){
+      d.reqs.forEach(function(r){ window.addRequirement(r.type || 'General', r.html || ''); });
+    } else if (typeof window.addRequirement === 'function') {
+      window.addRequirement();
+    }
+    window.logoDataUrl    = d.logo    || '';
+    window.diagramDataUrl = d.diagram || '';
+    var lp = document.getElementById('logoPreview');
+    var dp = document.getElementById('diagramPreview');
+    if (lp){ if (window.logoDataUrl){ lp.src = window.logoDataUrl; lp.classList.remove('d-none'); } else { lp.classList.add('d-none'); } }
+    if (dp){ if (window.diagramDataUrl){ dp.src = window.diagramDataUrl; dp.classList.remove('d-none'); } else { dp.classList.add('d-none'); } }
+  }
+
+  function exportJsonFull(){
+    try{
+      var data = buildFullData();
+      var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      var proj = (document.getElementById('projectName')?.value || 'Project').replace(/\s+/g,'_');
+      a.download = proj + '_full_export.json';
+      a.click();
+    }catch(e){
+      console.error(e);
+      alert('Export failed: ' + e.message);
+    }
+  }
+
+  function loadJsonFullFromFile(file){
+    var r = new FileReader();
+    r.onload = function(){
+      try{
+        var d = JSON.parse(r.result || '{}');
+        applyData(d);
+        if (typeof window.showToast === 'function') window.showToast('Full page loaded from JSON.');
+      }catch(e){
+        console.error(e);
+        alert('Failed to load JSON: ' + e.message);
+      }
+    };
+    r.readAsText(file);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var exportBtn = document.getElementById('exportJsonBtn');
+    if (exportBtn){
+      exportBtn.addEventListener('click', function(e){ e.preventDefault(); exportJsonFull(); });
+    }
+    var loadInput = document.getElementById('loadJsonInput');
+    if (loadInput){
+      loadInput.addEventListener('change', function(e){
+        if (e.target.files && e.target.files[0]) loadJsonFullFromFile(e.target.files[0]);
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>
