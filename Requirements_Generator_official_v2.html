@@ -204,6 +204,15 @@
 
             <!-- Requirements -->
             <div class="border rounded-3 p-3 mt-3">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <h5 class="m-0 section-title"><i class="bi bi-kanban"></i> Workpackages</h5>
+                <button type="button" class="btn btn-outline-primary" id="addWorkpackageBtn"><i class="bi bi-plus-square"></i> Add workpackage</button>
+              </div>
+              <p class="small-hint mt-2 mb-3">Define workpackages (e.g. ID: <em>Workpackage 1</em>, Name: <em>Assessment</em>) and assign each requirement to one.</p>
+              <div id="workpackageList"></div>
+            </div>
+
+            <div class="border rounded-3 p-3 mt-3">
               
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements</h5><div class="btn-group ms-auto" role="group">
                   <button type="button" class="btn btn-outline-secondary" id="addThree"><i class="bi bi-plus-lg"></i> Add 3 blank requirements</button>
@@ -552,7 +561,7 @@
 
     // ===== Utilities =====
     var TYPES = ['General','Functional','Non-functional'];
-    var FORM_STORAGE_KEY = 'reqgen:bootstrap:rte:onecol:v10'; // new namespace
+    var FORM_STORAGE_KEY = 'reqgen:bootstrap:rte:onecol:v11'; // new namespace
 
     function readFileAsDataURL(file){
       return new Promise(function(resolve,reject){
@@ -563,20 +572,112 @@
       });
     }
 
+    // ===== Workpackages UI =====
+    function createWorkpackageItem(initialId, initialName){
+      var wrap=document.createElement('div');
+      wrap.className='workpackage-item bg-body-tertiary rounded-3 p-3 mb-2';
+      var row=document.createElement('div'); row.className='row g-2 align-items-start';
+
+      var colId=document.createElement('div'); colId.className='col-12 col-md-4';
+      var idInput=document.createElement('input');
+      idInput.type='text';
+      idInput.className='form-control workpackage-id';
+      idInput.placeholder='Workpackage ID (e.g. Workpackage 1)';
+      idInput.value=initialId||'';
+      colId.appendChild(idInput);
+
+      var colName=document.createElement('div'); colName.className='col-12 col-md-7';
+      var nameInput=document.createElement('input');
+      nameInput.type='text';
+      nameInput.className='form-control workpackage-name';
+      nameInput.placeholder='Workpackage name (e.g. Assessment)';
+      nameInput.value=initialName||'';
+      colName.appendChild(nameInput);
+
+      var colRem=document.createElement('div'); colRem.className='col-12 col-md-1 d-grid';
+      var btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-outline-danger'; btn.innerHTML='<i class="bi bi-x-lg"></i>';
+      btn.addEventListener('click',function(){ wrap.remove(); refreshWorkpackageOptions(); });
+      colRem.appendChild(btn);
+
+      idInput.addEventListener('input', refreshWorkpackageOptions);
+      nameInput.addEventListener('input', refreshWorkpackageOptions);
+
+      row.append(colId,colName,colRem);
+      wrap.append(row);
+      return wrap;
+    }
+
+    function addWorkpackage(id,name){
+      document.getElementById('workpackageList').appendChild(createWorkpackageItem(id,name));
+      refreshWorkpackageOptions();
+    }
+
+    function getWorkpackages(){
+      return [].slice.call(document.querySelectorAll('.workpackage-item')).map(function(item){
+        return {
+          id: (item.querySelector('.workpackage-id').value || '').trim(),
+          name: (item.querySelector('.workpackage-name').value || '').trim()
+        };
+      }).filter(function(wp){ return wp.id || wp.name; });
+    }
+
+    function getWorkpackageLabel(wp, fallbackIndex){
+      if(!wp) return 'Unassigned';
+      var id = (wp.id || '').trim();
+      var name = (wp.name || '').trim();
+      if(id && name) return id + ' — ' + name;
+      if(id) return id;
+      if(name) return name;
+      return 'Workpackage ' + fallbackIndex;
+    }
+
+    function refreshWorkpackageOptions(){
+      var workpackages = getWorkpackages();
+      var options = workpackages.map(function(wp, idx){
+        return {
+          value: (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim(),
+          text: getWorkpackageLabel(wp, idx+1)
+        };
+      });
+      var requirementItems=[].slice.call(document.querySelectorAll('.req-item'));
+      requirementItems.forEach(function(item){
+        var wpSelect=item.querySelector('.req-workpackage');
+        if(!wpSelect) return;
+        var prev=wpSelect.value;
+        wpSelect.innerHTML='';
+        var unassigned=document.createElement('option');
+        unassigned.value='';
+        unassigned.textContent='Unassigned';
+        wpSelect.appendChild(unassigned);
+        options.forEach(function(opt){
+          var o=document.createElement('option');
+          o.value=opt.value;
+          o.textContent=opt.text;
+          wpSelect.appendChild(o);
+        });
+        if([].slice.call(wpSelect.options).some(function(o){ return o.value===prev; })) wpSelect.value=prev;
+      });
+    }
+
     // ===== Requirements UI =====
-    function createReqItem(initialType, initialHTML){
+    function createReqItem(initialType, initialHTML, initialWorkpackage){
       initialType = initialType || 'General';
       initialHTML = initialHTML || '';
+      initialWorkpackage = initialWorkpackage || '';
       var wrap=document.createElement('div');
       wrap.className='req-item bg-body-tertiary rounded-3 p-3 mb-2';
       var row=document.createElement('div'); row.className='row g-2 align-items-start';
 
-      var colType=document.createElement('div'); colType.className='col-12 col-md-3';
+      var colType=document.createElement('div'); colType.className='col-12 col-md-2';
       var sel=document.createElement('select'); sel.className='form-select';
       TYPES.forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; if(t===initialType)o.selected=true; sel.appendChild(o); });
       colType.appendChild(sel);
 
-      var colText=document.createElement('div'); colText.className='col-12 col-md-8';
+      var colWp=document.createElement('div'); colWp.className='col-12 col-md-3';
+      var wpSel=document.createElement('select'); wpSel.className='form-select req-workpackage';
+      colWp.appendChild(wpSel);
+
+      var colText=document.createElement('div'); colText.className='col-12 col-md-6';
       var tb=document.createElement('div'); tb.className='rte-toolbar'; tb.setAttribute('data-target', 'rte_' + Math.random().toString(36).slice(2));
       var ed=document.createElement('div'); ed.className='rte'; ed.setAttribute('id', tb.getAttribute('data-target')); ed.setAttribute('contenteditable','true'); ed.setAttribute('data-placeholder','Describe the requirement...');
       ed.innerHTML = initialHTML;
@@ -587,15 +688,18 @@
       btn.addEventListener('click',function(){ wrap.remove(); });
       colRem.appendChild(btn);
 
-      row.append(colType,colText,colRem);
+      row.append(colType,colWp,colText,colRem);
       wrap.append(row);
 
       buildToolbar(tb);
+      refreshWorkpackageOptions();
+      wpSel.value = initialWorkpackage || '';
       return wrap;
     }
-    function addRequirement(type,html){ document.getElementById('reqList').appendChild(createReqItem(type,html)); }
+    function addRequirement(type,html,workpackage){ document.getElementById('reqList').appendChild(createReqItem(type,html,workpackage)); }
     document.getElementById('addOne').addEventListener('click',function(){ addRequirement(); });
     document.getElementById('addThree').addEventListener('click',function(){ addRequirement(); addRequirement('Functional'); addRequirement('Non-functional'); });
+    document.getElementById('addWorkpackageBtn').addEventListener('click', function(){ addWorkpackage(); });
 
     function collectRequirements(){
       var items=[].slice.call(document.querySelectorAll('.req-item'));
@@ -603,7 +707,8 @@
       items.forEach(function(item){
         var type=item.querySelector('select').value;
         var html=(item.querySelector('.rte').innerHTML||'').trim();
-        if(html) grouped[type].push(html);
+        var workpackage=(item.querySelector('.req-workpackage')||{}).value||'';
+        if(html) grouped[type].push({ html: html, workpackage: workpackage });
       });
       return grouped;
     }
@@ -642,8 +747,13 @@
         notes: getHTML('notes'),
         logo: logoDataUrl||'',
         diagram: diagramDataUrl||'',
+        workpackages: getWorkpackages(),
         reqs: [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
-          return {type:item.querySelector('select').value, html:item.querySelector('.rte').innerHTML||''};
+          return {
+            type:item.querySelector('select').value,
+            workpackage:(item.querySelector('.req-workpackage')||{}).value||'',
+            html:item.querySelector('.rte').innerHTML||''
+          };
         })
       };
       localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
@@ -668,8 +778,14 @@
         setHTML('architectureDesc', d.architectureDesc||'');
         setHTML('deliverables', d.deliverables||'');
         setHTML('notes', d.notes||'');
+        document.getElementById('workpackageList').innerHTML='';
+        if(Array.isArray(d.workpackages) && d.workpackages.length){
+          d.workpackages.forEach(function(w){ addWorkpackage(w.id||'', w.name||''); });
+        } else {
+          addWorkpackage('Workpackage 1','Assessment');
+        }
         document.getElementById('reqList').innerHTML='';
-        if(Array.isArray(d.reqs)&&d.reqs.length){ d.reqs.forEach(function(r){ addRequirement(r.type||'General', r.html||''); }); } else { addRequirement(); }
+        if(Array.isArray(d.reqs)&&d.reqs.length){ d.reqs.forEach(function(r){ addRequirement(r.type||'General', r.html||'', r.workpackage||''); }); } else { addRequirement(); }
         logoDataUrl=d.logo||''; diagramDataUrl=d.diagram||'';
         if(logoDataUrl){ var lp=document.getElementById('logoPreview'); lp.src=logoDataUrl; lp.classList.remove('d-none'); }
         if(diagramDataUrl){ var dp=document.getElementById('diagramPreview'); dp.src=diagramDataUrl; dp.classList.remove('d-none'); }
@@ -681,6 +797,8 @@
       localStorage.removeItem(FORM_STORAGE_KEY);
       document.getElementById('projectName').value='';
       ['companyDesc','timeline','cost','stakeholders','goals','constraints','assumptions','outOfScope','timeCostDesc','architectureDesc','deliverables','notes'].forEach(function(id){ setHTML(id,''); });
+      document.getElementById('workpackageList').innerHTML='';
+      addWorkpackage('Workpackage 1','Assessment');
       document.getElementById('reqList').innerHTML=''; addRequirement();
       document.getElementById('logoPreview').classList.add('d-none');
       document.getElementById('diagramPreview').classList.add('d-none');
@@ -718,8 +836,9 @@
 
       function listBlock(type){
         if(!req[type].length) return '';
-        var items = req[type].map(function(html){
-          return '<li>'+ sanitize(html) +'</li>';
+        var items = req[type].map(function(item){
+          var wp = item.workpackage ? '<div><small><strong>Workpackage:</strong> ' + sanitize(item.workpackage) + '</small></div>' : '';
+          return '<li>'+ wp + sanitize(item.html) +'</li>';
         }).join('\n');
         return '<h3 class="h5 mt-3">'+type+'</h3>\n<ul class="ps-3">\n'+items+'\n</ul>';
       }
@@ -786,8 +905,20 @@
         ['Project Architecture - Description', htmlToText(getHTML('architectureDesc'))],
       ];
 
+      var workpackages = getWorkpackages();
+      var workpackageText = workpackages.length
+        ? workpackages.map(function(wp, idx){ return (idx+1)+'. ' + getWorkpackageLabel(wp, idx+1); }).join('\n')
+        : '—';
+      fields.push(['Workpackages', workpackageText]);
+
       var req = collectRequirements();
-      function joinList(arr){ return (arr||[]).map(function(x,i){ return (i+1)+'. '+htmlToText(x); }).join('\n'); }
+      function joinList(arr){
+        return (arr||[]).map(function(item,i){
+          var reqText = htmlToText(item.html||'');
+          var wpText = item.workpackage ? ' [Workpackage: ' + item.workpackage + ']' : '';
+          return (i+1)+'. '+reqText+wpText;
+        }).join('\n');
+      }
       var reqText = '';
       if(req.General.length)       reqText += 'General:\n' + joinList(req.General) + '\n\n';
       if(req.Functional.length)    reqText += 'Functional:\n' + joinList(req.Functional) + '\n\n';
@@ -883,7 +1014,13 @@
         var typeSel = item.querySelector('select');
         var type = typeSel ? typeSel.value : '';
         var html = (item.querySelector('.rte') || {}).innerHTML || '';
-        rows.push(['requirement', String(idx), type, html]);
+        var workpackage = (item.querySelector('.req-workpackage') || {}).value || '';
+        rows.push(['requirement', String(idx), type, JSON.stringify({ html: html, workpackage: workpackage })]);
+      });
+      // WORKPACKAGES
+      var workpackages = getWorkpackages();
+      workpackages.forEach(function(wp, idx){
+        rows.push(['workpackage', String(idx), wp.id || '', wp.name || '']);
       });
       return rows;
     }
@@ -972,14 +1109,33 @@
               el.value = val;
             }
           }
+          // Then rebuild workpackages
+          var wpRows = rows.filter(function(r, idx){
+            if (idx === 0) return false;
+            return (r[idxSection] || '').toLowerCase() === 'workpackage';
+          });
+          var wpList = document.getElementById('workpackageList');
+          if (wpList) wpList.innerHTML = '';
+          if (wpRows.length && typeof addWorkpackage === 'function'){
+            wpRows.sort(function(a,b){
+              var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
+              return ai - bi;
+            });
+            wpRows.forEach(function(rw){
+              addWorkpackage(rw[idxValue] || '', (idxExtra !== -1 ? rw[idxExtra] : '') || '');
+            });
+          } else if (typeof addWorkpackage === 'function') {
+            addWorkpackage('Workpackage 1', 'Assessment');
+          }
+
           // Then rebuild requirements
           var reqRows = rows.filter(function(r, idx){
             if (idx === 0) return false;
             return (r[idxSection] || '').toLowerCase() === 'requirement';
           });
+          var list = document.getElementById('reqList');
+          if (list) list.innerHTML = '';
           if (reqRows.length){
-            var list = document.getElementById('reqList');
-            if (list) list.innerHTML = '';
             // Sort by numeric key/index
             reqRows.sort(function(a,b){
               var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
@@ -987,11 +1143,22 @@
             });
             reqRows.forEach(function(rw){
               var type = rw[idxValue] || 'General';
-              var html = (idxExtra !== -1 ? rw[idxExtra] : '');
+              var payload = (idxExtra !== -1 ? rw[idxExtra] : '');
+              var html = payload;
+              var workpackage = '';
+              try {
+                var parsed = JSON.parse(payload || '{}');
+                if (parsed && typeof parsed === 'object') {
+                  html = parsed.html || '';
+                  workpackage = parsed.workpackage || '';
+                }
+              } catch(_e) {}
               if (typeof addRequirement === 'function'){
-                addRequirement(type, html);
+                addRequirement(type, html, workpackage);
               }
             });
+          } else if (typeof addRequirement === 'function') {
+            addRequirement();
           }
           showToast && showToast('Full page loaded from CSV.');
         }catch(e){
@@ -1075,7 +1242,13 @@
         var typeSel = item.querySelector('select');
         var type = typeSel ? typeSel.value : '';
         var html = (item.querySelector('.rte') || {}).innerHTML || '';
-        rows.push(['requirement', String(idx), type, html]);
+        var workpackage = (item.querySelector('.req-workpackage') || {}).value || '';
+        rows.push(['requirement', String(idx), type, JSON.stringify({ html: html, workpackage: workpackage })]);
+      });
+      // WORKPACKAGES
+      var workpackages = getWorkpackages();
+      workpackages.forEach(function(wp, idx){
+        rows.push(['workpackage', String(idx), wp.id || '', wp.name || '']);
       });
       return rows;
     }
@@ -1144,25 +1317,55 @@
               el.value = val;
             }
           });
+          // Then rebuild workpackages
+          var wpRows = rows.filter(function(r, idx){
+            if (idx === 0) return false;
+            return (r[idxSection] || '').toLowerCase() === 'workpackage';
+          });
+          var wpList = document.getElementById('workpackageList');
+          if (wpList) wpList.innerHTML = '';
+          if (wpRows.length && typeof addWorkpackage === 'function'){
+            wpRows.sort(function(a,b){
+              var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
+              return ai - bi;
+            });
+            wpRows.forEach(function(rw){
+              addWorkpackage(rw[idxValue] || '', (idxExtra !== -1 ? rw[idxExtra] : '') || '');
+            });
+          } else if (typeof addWorkpackage === 'function') {
+            addWorkpackage('Workpackage 1', 'Assessment');
+          }
+
           // Then rebuild requirements
           var reqRows = rows.filter(function(r, idx){
             if (idx === 0) return false;
             return (r[idxSection] || '').toLowerCase() === 'requirement';
           });
+          var list = document.getElementById('reqList');
+          if (list) list.innerHTML = '';
           if (reqRows.length){
-            var list = document.getElementById('reqList');
-            if (list) list.innerHTML = '';
             reqRows.sort(function(a,b){
               var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
               return ai - bi;
             });
             reqRows.forEach(function(rw){
               var type = rw[idxValue] || 'General';
-              var html = (idxExtra !== -1 ? rw[idxExtra] : '');
+              var payload = (idxExtra !== -1 ? rw[idxExtra] : '');
+              var html = payload;
+              var workpackage = '';
+              try {
+                var parsed = JSON.parse(payload || '{}');
+                if (parsed && typeof parsed === 'object') {
+                  html = parsed.html || '';
+                  workpackage = parsed.workpackage || '';
+                }
+              } catch(_e) {}
               if (typeof addRequirement === 'function'){
-                addRequirement(type, html);
+                addRequirement(type, html, workpackage);
               }
             });
+          } else if (typeof addRequirement === 'function') {
+            addRequirement();
           }
           if (typeof showToast === 'function') showToast('Full page loaded from CSV.');
         }catch(e){
@@ -1191,6 +1394,7 @@
 
     // ===== Init =====
     initRTEs();
+    addWorkpackage('Workpackage 1','Assessment');
     addRequirement();
     restoreForm();
   
@@ -1224,8 +1428,10 @@
     var reqItems = Array.prototype.slice.call(document.querySelectorAll('.req-item')).map(function(item){
       var sel  = item.querySelector('select');
       var rte  = item.querySelector('.rte');
-      return { type: sel ? sel.value : 'General', html: rte ? rte.innerHTML : '' };
+      var wpSel = item.querySelector('.req-workpackage');
+      return { type: sel ? sel.value : 'General', workpackage: wpSel ? wpSel.value : '', html: rte ? rte.innerHTML : '' };
     });
+    var workpackages = (typeof window.getWorkpackages === 'function') ? window.getWorkpackages() : [];
     return {
       projectName: (g('projectName') && g('projectName').value) || '',
       companyDesc: getInner('companyDesc'),
@@ -1242,6 +1448,7 @@
       notes: getInner('notes'),
       logo: (typeof window.logoDataUrl !== 'undefined' && window.logoDataUrl) ? window.logoDataUrl : '',
       diagram: (typeof window.diagramDataUrl !== 'undefined' && window.diagramDataUrl) ? window.diagramDataUrl : '',
+      workpackages: workpackages,
       reqs: reqItems
     };
   }
@@ -1262,10 +1469,17 @@
     setHTML('architectureDesc', d.architectureDesc || '');
     setHTML('deliverables',  d.deliverables  || '');
     setHTML('notes',         d.notes         || '');
+    var wpList = document.getElementById('workpackageList');
+    if (wpList) wpList.innerHTML = '';
+    if (Array.isArray(d.workpackages) && d.workpackages.length && typeof window.addWorkpackage === 'function'){
+      d.workpackages.forEach(function(w){ window.addWorkpackage(w.id || '', w.name || ''); });
+    } else if (typeof window.addWorkpackage === 'function') {
+      window.addWorkpackage('Workpackage 1', 'Assessment');
+    }
     var list = document.getElementById('reqList');
     if (list) list.innerHTML = '';
     if (Array.isArray(d.reqs) && d.reqs.length && typeof window.addRequirement === 'function'){
-      d.reqs.forEach(function(r){ window.addRequirement(r.type || 'General', r.html || ''); });
+      d.reqs.forEach(function(r){ window.addRequirement(r.type || 'General', r.html || '', r.workpackage || ''); });
     } else if (typeof window.addRequirement === 'function') {
       window.addRequirement();
     }
