@@ -453,7 +453,7 @@
 
     var brand = document.querySelector('.navbar-brand');
     var pname = brand ? brand.textContent : (document.title || 'Project');
-    var KEY = 'reqdoc:' + pname.replace(/\s+/g,'_') + ':bootstrap:rte:onecol:v10';
+    var KEY = 'reqdoc:' + pname.replace(/\s+/g,'_') + ':bootstrap:rte:onecol:v10:[[DOC_INSTANCE_ID]]';
     var root = document.getElementById('editableRoot');
     var editBtn = document.getElementById('editBtn');
     var saveBtn = document.getElementById('saveBtn');
@@ -899,8 +899,10 @@
       var tmpl = document.getElementById('docTemplate').innerHTML;
 
       var projectNameEsc = projectName.replace(/[&<>"]/g, function(s){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s];});
+      var docInstanceId = String(Date.now());
       var html = tmpl
         .split('[[PROJECT_NAME_ESC]]').join(projectNameEsc)
+        .replace('[[DOC_INSTANCE_ID]]', docInstanceId)
         .replace('[[COMPANY_DESC_HTML]]', companyDesc)
         .replace('[[STAKEHOLDERS_HTML]]', stakeholders)
         .replace('[[GOALS_HTML]]', goals)
