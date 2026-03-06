@@ -110,7 +110,7 @@
         </div>
 
         <button class="btn btn-success btn-sm" id="generateBtn" type="button">
-          <i class="bi bi-filetype-html"></i> Generate &amp; Save HTML
+          <i class="bi bi-eye"></i> Open Preview (then Save as PDF)
         </button>
       </div>
 
@@ -919,12 +919,13 @@
         .replace('[[LOGO_DATA_URL]]', logoDataUrl || '')
         .replace('[[DIAGRAM_DATA_URL]]', diagramDataUrl || '');
 
-      var safeName = projectName.replace(/\s+/g,'_');
       var blob = new Blob([html], {type:'text/html'});
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = safeName + '_Requirements_ONE_COLUMN.html';
-      a.click();
+      var url = URL.createObjectURL(blob);
+      var preview = window.open(url, '_blank');
+      if(!preview){
+        alert('Pop-up blocked. Please allow pop-ups to open the preview.');
+      }
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
     }
 
     document.getElementById('generateBtn').addEventListener('click', generateHTML);
