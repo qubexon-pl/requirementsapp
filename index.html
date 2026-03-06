@@ -478,13 +478,7 @@
     pdfBtn.addEventListener('click', function(){ window.print(); });
     window.addEventListener('beforeunload', function(){ localStorage.setItem(KEY, root.innerHTML); });
   })();
-  
-    // Export / Import (Full CSV)
-    document.getElementById('exportCsvBtn').addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
-    document.getElementById('loadCsvInput').addEventListener('change', function(e){ if(e.target.files && e.target.files[0]) loadCsvFullFromFile(e.target.files[0]); });
-
-
-    // Export / Import (Full CSV)
+      // Export / Import (Full CSV)
     var exportCsvBtn = document.getElementById('exportCsvBtn');
     if (exportCsvBtn){
       exportCsvBtn.addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
@@ -1443,13 +1437,7 @@
     addWorkpackage('Workpackage 1','Assessment');
     addRequirement();
     restoreForm();
-  
-    // Export / Import (Full CSV)
-    document.getElementById('exportCsvBtn').addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
-    document.getElementById('loadCsvInput').addEventListener('change', function(e){ if(e.target.files && e.target.files[0]) loadCsvFullFromFile(e.target.files[0]); });
-
-
-    // Export / Import (Full CSV)
+      // Export / Import (Full CSV)
     var exportCsvBtn = document.getElementById('exportCsvBtn');
     if (exportCsvBtn){
       exportCsvBtn.addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
