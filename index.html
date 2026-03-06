@@ -459,7 +459,16 @@
     var saveBtn = document.getElementById('saveBtn');
     var pdfBtn  = document.getElementById('pdfBtn');
     var docRteBar = document.getElementById('docRteBar');
-    var saved = localStorage.getItem(KEY);
+    function getStoredValue(key){
+      try { return window.localStorage.getItem(key); }
+      catch (e) { return null; }
+    }
+    function setStoredValue(key, value){
+      try { window.localStorage.setItem(key, value); return true; }
+      catch (e) { return false; }
+    }
+
+    var saved = getStoredValue(KEY);
     if (saved) { root.innerHTML = saved; }
 
     function setEditable(on){
@@ -474,9 +483,12 @@
       setEditable(!on);
       editBtn.innerHTML = on ? '<i class="bi bi-pencil-square"></i> Edit' : '<i class="bi bi-check2-square"></i> Stop Editing';
     });
-    saveBtn.addEventListener('click', function(){ localStorage.setItem(KEY, root.innerHTML); alert('Saved!'); });
+    saveBtn.addEventListener('click', function(){
+      var ok = setStoredValue(KEY, root.innerHTML);
+      alert(ok ? 'Saved!' : 'Save is unavailable in this preview tab. You can still edit and use Save as PDF.');
+    });
     pdfBtn.addEventListener('click', function(){ window.print(); });
-    window.addEventListener('beforeunload', function(){ localStorage.setItem(KEY, root.innerHTML); });
+    window.addEventListener('beforeunload', function(){ setStoredValue(KEY, root.innerHTML); });
   })();
       // Export / Import (Full CSV)
     var exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -556,6 +568,19 @@
     // ===== Utilities =====
     var TYPES = ['General','Functional','Non-functional'];
     var FORM_STORAGE_KEY = 'reqgen:bootstrap:rte:onecol:v11'; // new namespace
+
+    function storageGet(key){
+      try { return window.localStorage.getItem(key); }
+      catch (e) { return null; }
+    }
+    function storageSet(key, value){
+      try { window.localStorage.setItem(key, value); return true; }
+      catch (e) { return false; }
+    }
+    function storageRemove(key){
+      try { window.localStorage.removeItem(key); return true; }
+      catch (e) { return false; }
+    }
 
     function readFileAsDataURL(file){
       return new Promise(function(resolve,reject){
@@ -767,12 +792,13 @@
           };
         })
       };
-      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
-      showToast('Form saved locally.');
+      if(storageSet(FORM_STORAGE_KEY, JSON.stringify(data))){
+        showToast('Form saved locally.');
+      }
     }
 
     function restoreForm(){
-      var raw=localStorage.getItem(FORM_STORAGE_KEY);
+      var raw=storageGet(FORM_STORAGE_KEY);
       if(!raw){ addRequirement(); return; }
       try{
         var d=JSON.parse(raw);
@@ -805,7 +831,7 @@
 
     function clearForm(){
       if(!confirm('Clear all form fields and remove the saved copy?')) return;
-      localStorage.removeItem(FORM_STORAGE_KEY);
+      storageRemove(FORM_STORAGE_KEY);
       document.getElementById('projectName').value='';
       ['companyDesc','timeline','cost','stakeholders','goals','constraints','assumptions','outOfScope','timeCostDesc','architectureDesc','deliverables','notes'].forEach(function(id){ setHTML(id,''); });
       document.getElementById('workpackageList').innerHTML='';
@@ -821,8 +847,11 @@
     document.getElementById('clearFormBtn').addEventListener('click', clearForm);
     document.getElementById('resetStorageBtn').addEventListener('click', function(){
       if(!confirm('Clear saved local storage data for this form? This will not wipe the current page fields.')) return;
-      localStorage.removeItem(FORM_STORAGE_KEY);
-      alert('Local storage reset. Reload page to start fresh.');
+      if(storageRemove(FORM_STORAGE_KEY)){
+        alert('Local storage reset. Reload page to start fresh.');
+      } else {
+        alert('Could not access local storage in this browser context.');
+      }
     });
     window.addEventListener('beforeunload', saveForm);
 
