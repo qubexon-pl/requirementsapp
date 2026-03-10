@@ -88,6 +88,12 @@
     @media (max-width: 992px){
       .app-container{ width: 100%; }
     }
+
+    /* Keep requirement description editor wider on desktop */
+    .req-text-col { min-width: 0; }
+    @media (min-width: 992px){
+      .req-text-col { flex: 1 1 0; }
+    }
 </style>
 </head>
 <body>
@@ -760,16 +766,16 @@
       wrap.className='req-item bg-body-tertiary rounded-3 p-3 mb-2';
       var row=document.createElement('div'); row.className='row g-2 align-items-start';
 
-      var colType=document.createElement('div'); colType.className='col-12 col-md-2';
+      var colType=document.createElement('div'); colType.className='col-12 col-lg-2';
       var sel=document.createElement('select'); sel.className='form-select';
       TYPES.forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; if(t===initialType)o.selected=true; sel.appendChild(o); });
       colType.appendChild(sel);
 
-      var colWp=document.createElement('div'); colWp.className='col-12 col-md-3';
+      var colWp=document.createElement('div'); colWp.className='col-12 col-lg-2';
       var wpSel=document.createElement('select'); wpSel.className='form-select req-workpackage';
       colWp.appendChild(wpSel);
 
-      var colEstimate=document.createElement('div'); colEstimate.className='col-12 col-md-2';
+      var colEstimate=document.createElement('div'); colEstimate.className='col-12 col-lg-2';
       var estimateInput=document.createElement('input');
       estimateInput.type='number';
       estimateInput.min='0';
@@ -779,13 +785,13 @@
       estimateInput.value=initialEstimateHours;
       colEstimate.appendChild(estimateInput);
 
-      var colText=document.createElement('div'); colText.className='col-12 col-md-4';
+      var colText=document.createElement('div'); colText.className='col-12 col-lg-5 req-text-col';
       var tb=document.createElement('div'); tb.className='rte-toolbar'; tb.setAttribute('data-target', 'rte_' + Math.random().toString(36).slice(2));
       var ed=document.createElement('div'); ed.className='rte'; ed.setAttribute('id', tb.getAttribute('data-target')); ed.setAttribute('contenteditable','true'); ed.setAttribute('data-placeholder','Describe the requirement...');
       ed.innerHTML = initialHTML;
       colText.append(tb, ed);
 
-      var colRem=document.createElement('div'); colRem.className='col-12 col-md-1 d-grid';
+      var colRem=document.createElement('div'); colRem.className='col-12 col-lg-1 d-grid';
       var btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-outline-danger'; btn.innerHTML='<i class="bi bi-x-lg"></i>';
       btn.addEventListener('click',function(){ wrap.remove(); updateWorkpackageTotals(); });
       colRem.appendChild(btn);
