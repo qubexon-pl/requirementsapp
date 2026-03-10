@@ -622,13 +622,18 @@
 
       var colRem=document.createElement('div'); colRem.className='col-12 col-md-1 d-grid';
       var btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-outline-danger'; btn.innerHTML='<i class="bi bi-x-lg"></i>';
-      btn.addEventListener('click',function(){ wrap.remove(); refreshWorkpackageOptions(); });
+      btn.addEventListener('click',function(){ wrap.remove(); refreshWorkpackageOptions(); updateWorkpackageTotals(); });
       colRem.appendChild(btn);
 
-      idInput.addEventListener('input', refreshWorkpackageOptions);
-      nameInput.addEventListener('input', refreshWorkpackageOptions);
+      var colSummary=document.createElement('div'); colSummary.className='col-12';
+      var summary=document.createElement('div'); summary.className='small-hint workpackage-summary';
+      summary.textContent='Total estimation: 0 h (0 requirements)';
+      colSummary.appendChild(summary);
 
-      row.append(colId,colName,colRem);
+      idInput.addEventListener('input', function(){ refreshWorkpackageOptions(); updateWorkpackageTotals(); });
+      nameInput.addEventListener('input', function(){ refreshWorkpackageOptions(); updateWorkpackageTotals(); });
+
+      row.append(colId,colName,colRem,colSummary);
       wrap.append(row);
       return wrap;
     }
@@ -657,6 +662,41 @@
       return 'Workpackage ' + fallbackIndex;
     }
 
+    function parseEstimateHours(value){
+      if(value === null || value === undefined || value === '') return 0;
+      var parsed = Number(value);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    }
+
+    function getRequirementEntries(){
+      return [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
+        return {
+          workpackage: (item.querySelector('.req-workpackage') || {}).value || '',
+          estimateHours: parseEstimateHours((item.querySelector('.req-estimate-hours') || {}).value || '')
+        };
+      });
+    }
+
+    function updateWorkpackageTotals(){
+      var totals = {};
+      getRequirementEntries().forEach(function(entry){
+        if(!entry.workpackage) return;
+        if(!totals[entry.workpackage]) totals[entry.workpackage] = { hours: 0, requirements: 0 };
+        totals[entry.workpackage].hours += entry.estimateHours;
+        totals[entry.workpackage].requirements += 1;
+      });
+
+      [].slice.call(document.querySelectorAll('.workpackage-item')).forEach(function(item, idx){
+        var id = (item.querySelector('.workpackage-id').value || '').trim();
+        var name = (item.querySelector('.workpackage-name').value || '').trim();
+        var key = (id || name || ('Workpackage ' + (idx + 1))).trim();
+        var summary = item.querySelector('.workpackage-summary');
+        if(!summary) return;
+        var stats = totals[key] || { hours: 0, requirements: 0 };
+        summary.textContent = 'Total estimation: ' + stats.hours + ' h (' + stats.requirements + ' requirements)';
+      });
+    }
+
     function refreshWorkpackageOptions(){
       var workpackages = getWorkpackages();
       var options = workpackages.map(function(wp, idx){
@@ -683,6 +723,7 @@
         });
         if([].slice.call(wpSelect.options).some(function(o){ return o.value===prev; })) wpSelect.value=prev;
       });
+      updateWorkpackageTotals();
     }
 
     function setReqWorkpackageValue(wpSelect, initialWorkpackage){
@@ -700,10 +741,11 @@
     }
 
     // ===== Requirements UI =====
-    function createReqItem(initialType, initialHTML, initialWorkpackage){
+    function createReqItem(initialType, initialHTML, initialWorkpackage, initialEstimateHours){
       initialType = initialType || 'General';
       initialHTML = initialHTML || '';
       initialWorkpackage = initialWorkpackage || '';
+      initialEstimateHours = initialEstimateHours || '';
       var wrap=document.createElement('div');
       wrap.className='req-item bg-body-tertiary rounded-3 p-3 mb-2';
       var row=document.createElement('div'); row.className='row g-2 align-items-start';
@@ -717,7 +759,17 @@
       var wpSel=document.createElement('select'); wpSel.className='form-select req-workpackage';
       colWp.appendChild(wpSel);
 
-      var colText=document.createElement('div'); colText.className='col-12 col-md-6';
+      var colEstimate=document.createElement('div'); colEstimate.className='col-12 col-md-2';
+      var estimateInput=document.createElement('input');
+      estimateInput.type='number';
+      estimateInput.min='0';
+      estimateInput.step='0.5';
+      estimateInput.placeholder='Hours';
+      estimateInput.className='form-control req-estimate-hours';
+      estimateInput.value=initialEstimateHours;
+      colEstimate.appendChild(estimateInput);
+
+      var colText=document.createElement('div'); colText.className='col-12 col-md-4';
       var tb=document.createElement('div'); tb.className='rte-toolbar'; tb.setAttribute('data-target', 'rte_' + Math.random().toString(36).slice(2));
       var ed=document.createElement('div'); ed.className='rte'; ed.setAttribute('id', tb.getAttribute('data-target')); ed.setAttribute('contenteditable','true'); ed.setAttribute('data-placeholder','Describe the requirement...');
       ed.innerHTML = initialHTML;
@@ -725,20 +777,24 @@
 
       var colRem=document.createElement('div'); colRem.className='col-12 col-md-1 d-grid';
       var btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-outline-danger'; btn.innerHTML='<i class="bi bi-x-lg"></i>';
-      btn.addEventListener('click',function(){ wrap.remove(); });
+      btn.addEventListener('click',function(){ wrap.remove(); updateWorkpackageTotals(); });
       colRem.appendChild(btn);
 
-      row.append(colType,colWp,colText,colRem);
+      wpSel.addEventListener('change', updateWorkpackageTotals);
+      estimateInput.addEventListener('input', updateWorkpackageTotals);
+
+      row.append(colType,colWp,colEstimate,colText,colRem);
       wrap.append(row);
 
       buildToolbar(tb);
       return wrap;
     }
-    function addRequirement(type,html,workpackage){
-      var item = createReqItem(type,html,workpackage);
+    function addRequirement(type,html,workpackage,estimateHours){
+      var item = createReqItem(type,html,workpackage,estimateHours);
       document.getElementById('reqList').appendChild(item);
       refreshWorkpackageOptions();
       setReqWorkpackageValue(item.querySelector('.req-workpackage'), workpackage);
+      updateWorkpackageTotals();
     }
     document.getElementById('addOne').addEventListener('click',function(){ addRequirement(); });
     document.getElementById('addThree').addEventListener('click',function(){ addRequirement(); addRequirement('Functional'); addRequirement('Non-functional'); });
@@ -751,7 +807,8 @@
         var type=item.querySelector('select').value;
         var html=(item.querySelector('.rte').innerHTML||'').trim();
         var workpackage=(item.querySelector('.req-workpackage')||{}).value||'';
-        if(html) grouped[type].push({ html: html, workpackage: workpackage });
+        var estimateHours=parseEstimateHours((item.querySelector('.req-estimate-hours')||{}).value||'');
+        if(html) grouped[type].push({ html: html, workpackage: workpackage, estimateHours: estimateHours });
       });
       return grouped;
     }
@@ -796,6 +853,7 @@
           return {
             type:item.querySelector('select').value,
             workpackage:(item.querySelector('.req-workpackage')||{}).value||'',
+            estimateHours:(item.querySelector('.req-estimate-hours')||{}).value||'',
             html:item.querySelector('.rte').innerHTML||''
           };
         })
@@ -831,7 +889,7 @@
           addWorkpackage('Workpackage 1','Assessment');
         }
         document.getElementById('reqList').innerHTML='';
-        if(Array.isArray(d.reqs)&&d.reqs.length){ d.reqs.forEach(function(r){ addRequirement(r.type||'General', r.html||'', r.workpackage||''); }); } else { addRequirement(); }
+        if(Array.isArray(d.reqs)&&d.reqs.length){ d.reqs.forEach(function(r){ addRequirement(r.type||'General', r.html||'', r.workpackage||'', r.estimateHours||''); }); } else { addRequirement(); }
         logoDataUrl=d.logo||''; diagramDataUrl=d.diagram||'';
         if(logoDataUrl){ var lp=document.getElementById('logoPreview'); lp.src=logoDataUrl; lp.classList.remove('d-none'); }
         if(diagramDataUrl){ var dp=document.getElementById('diagramPreview'); dp.src=diagramDataUrl; dp.classList.remove('d-none'); }
@@ -886,6 +944,7 @@
         return {
           type: item.querySelector('select').value,
           workpackage: (item.querySelector('.req-workpackage')||{}).value||'',
+          estimateHours: parseEstimateHours((item.querySelector('.req-estimate-hours')||{}).value||''),
           html: (item.querySelector('.rte').innerHTML||'').trim()
         };
       }).filter(function(item){ return item.html; });
@@ -915,7 +974,9 @@
       function renderWorkpackageBlock(wp){
         var hasAny = wp.grouped.General.length || wp.grouped.Functional.length || wp.grouped['Non-functional'].length;
         if(!hasAny) return '';
-        return '<div class="mb-3"><h3 class="h5 mt-3">' + sanitize(wp.label) + '</h3>'
+        var allItems = wp.grouped.General.concat(wp.grouped.Functional, wp.grouped['Non-functional']);
+        var totalHours = allItems.reduce(function(sum, item){ return sum + parseEstimateHours(item.estimateHours); }, 0);
+        return '<div class="mb-3"><h3 class="h5 mt-3">' + sanitize(wp.label) + ' <span class="small text-body-secondary">(Total estimation: ' + totalHours + ' h)</span></h3>'
           + renderTypeList(wp.grouped, 'General')
           + renderTypeList(wp.grouped, 'Functional')
           + renderTypeList(wp.grouped, 'Non-functional')
@@ -987,8 +1048,18 @@
       ];
 
       var workpackages = getWorkpackages();
+      var reqItemsForTotals = [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
+        return {
+          workpackage: (item.querySelector('.req-workpackage') || {}).value || '',
+          estimateHours: parseEstimateHours((item.querySelector('.req-estimate-hours') || {}).value || '')
+        };
+      });
       var workpackageText = workpackages.length
-        ? workpackages.map(function(wp, idx){ return (idx+1)+'. ' + getWorkpackageLabel(wp, idx+1); }).join('\n')
+        ? workpackages.map(function(wp, idx){
+            var key = (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim();
+            var total = reqItemsForTotals.filter(function(r){ return r.workpackage === key; }).reduce(function(sum, r){ return sum + r.estimateHours; }, 0);
+            return (idx+1)+'. ' + getWorkpackageLabel(wp, idx+1) + ' (Total estimation: ' + total + ' h)';
+          }).join('\n')
         : '—';
       fields.push(['Workpackages', workpackageText]);
 
@@ -997,7 +1068,8 @@
         return (arr||[]).map(function(item,i){
           var reqText = htmlToText(item.html||'');
           var wpText = item.workpackage ? ' [Workpackage: ' + item.workpackage + ']' : '';
-          return (i+1)+'. '+reqText+wpText;
+          var estText = item.estimateHours ? ' [Estimation: ' + item.estimateHours + ' h]' : '';
+          return (i+1)+'. '+reqText+wpText+estText;
         }).join('\n');
       }
       var reqText = '';
@@ -1096,7 +1168,7 @@
         var type = typeSel ? typeSel.value : '';
         var html = (item.querySelector('.rte') || {}).innerHTML || '';
         var workpackage = (item.querySelector('.req-workpackage') || {}).value || '';
-        rows.push(['requirement', String(idx), type, JSON.stringify({ html: html, workpackage: workpackage })]);
+        rows.push(['requirement', String(idx), type, JSON.stringify({ html: html, workpackage: workpackage, estimateHours: (item.querySelector('.req-estimate-hours') || {}).value || '' })]);
       });
       // WORKPACKAGES
       var workpackages = getWorkpackages();
@@ -1227,15 +1299,17 @@
               var payload = (idxExtra !== -1 ? rw[idxExtra] : '');
               var html = payload;
               var workpackage = '';
+              var estimateHours = '';
               try {
                 var parsed = JSON.parse(payload || '{}');
                 if (parsed && typeof parsed === 'object') {
                   html = parsed.html || '';
                   workpackage = parsed.workpackage || '';
+                  estimateHours = parsed.estimateHours || '';
                 }
               } catch(_e) {}
               if (typeof addRequirement === 'function'){
-                addRequirement(type, html, workpackage);
+                addRequirement(type, html, workpackage, estimateHours);
               }
             });
           } else if (typeof addRequirement === 'function') {
@@ -1324,7 +1398,7 @@
         var type = typeSel ? typeSel.value : '';
         var html = (item.querySelector('.rte') || {}).innerHTML || '';
         var workpackage = (item.querySelector('.req-workpackage') || {}).value || '';
-        rows.push(['requirement', String(idx), type, JSON.stringify({ html: html, workpackage: workpackage })]);
+        rows.push(['requirement', String(idx), type, JSON.stringify({ html: html, workpackage: workpackage, estimateHours: (item.querySelector('.req-estimate-hours') || {}).value || '' })]);
       });
       // WORKPACKAGES
       var workpackages = getWorkpackages();
@@ -1434,15 +1508,17 @@
               var payload = (idxExtra !== -1 ? rw[idxExtra] : '');
               var html = payload;
               var workpackage = '';
+              var estimateHours = '';
               try {
                 var parsed = JSON.parse(payload || '{}');
                 if (parsed && typeof parsed === 'object') {
                   html = parsed.html || '';
                   workpackage = parsed.workpackage || '';
+                  estimateHours = parsed.estimateHours || '';
                 }
               } catch(_e) {}
               if (typeof addRequirement === 'function'){
-                addRequirement(type, html, workpackage);
+                addRequirement(type, html, workpackage, estimateHours);
               }
             });
           } else if (typeof addRequirement === 'function') {
@@ -1504,7 +1580,7 @@
       var sel  = item.querySelector('select');
       var rte  = item.querySelector('.rte');
       var wpSel = item.querySelector('.req-workpackage');
-      return { type: sel ? sel.value : 'General', workpackage: wpSel ? wpSel.value : '', html: rte ? rte.innerHTML : '' };
+      return { type: sel ? sel.value : 'General', workpackage: wpSel ? wpSel.value : '', estimateHours: (item.querySelector('.req-estimate-hours') || {}).value || '', html: rte ? rte.innerHTML : '' };
     });
     var workpackages = (typeof window.getWorkpackages === 'function') ? window.getWorkpackages() : [];
     return {
@@ -1556,7 +1632,7 @@
     var list = document.getElementById('reqList');
     if (list) list.innerHTML = '';
     if (Array.isArray(d.reqs) && d.reqs.length && typeof window.addRequirement === 'function'){
-      d.reqs.forEach(function(r){ window.addRequirement(r.type || 'General', r.html || '', r.workpackage || ''); });
+      d.reqs.forEach(function(r){ window.addRequirement(r.type || 'General', r.html || '', r.workpackage || '', r.estimateHours || ''); });
     } else if (typeof window.addRequirement === 'function') {
       window.addRequirement();
     }
