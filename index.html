@@ -78,6 +78,16 @@
       padding: .9rem 1.1rem;
       box-shadow: 0 8px 18px rgba(0,0,0,.15);
     }
+
+    /* Wider main editing area */
+    .app-container{
+      width: min(80vw, 1700px);
+      max-width: none;
+    }
+
+    @media (max-width: 992px){
+      .app-container{ width: 100%; }
+    }
 </style>
 </head>
 <body>
@@ -117,7 +127,7 @@
     </div>
   </nav>
 
-  <main class="container my-4">
+  <main class="container app-container my-4">
     <div class="row g-4">
       <div class="col-12 col-xxl-10 mx-auto">
         <div class="card shadow-sm">
