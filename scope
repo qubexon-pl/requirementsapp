@@ -1,0 +1,39 @@
+A S S U M PT I O N S
+Six data source types will be implemented in PoC (SAP, QVD, Excel, Azure SQL, Salesforce API, OneDrive).
+Qlik transformation logic documented and provided (all easy complexity).
+Qlik report specifications and data model shared prior to design phase.
+Up to 79 data objects will be implemented across all 3 layers (Bronze, Silver, Gold). It must be treated as or
+example: Excel sheet - 1 object, Azure SQL view, table - 1 object, Salesforce API (one method) - 1 object,
+SAP view - 1 object, QVD files - if logic for one file contains 4 different tables/view then total count of
+objects will be 4.
+Complexity of QVD logis is assumed to be easy (80%), moderate the remaining 20%,
+Star schema design will be jointly defined (first data warehouse implementation).
+Reports will be redesigned using Power BI best practices (not 1:1 replica).
+3 layer architecture: bronze - one to one data from data source (all mentioned objects), Silver -
+transformation layer (up to 15 easy transformations has been estimated on top of objects used for GOld layer
+purposes), Gold - reporting layer (up to 20 objects).
+Semantic model shape delivered collaboratively.
+All data source connections documented and supported by Microsoft Fabric.
+Domain accounts shared with SoftwareOne team.
+Microsoft Fabric capacity provisioned and assigned to Workspace.
+Fabric administrator role assigned to SoftwareOne team members.Row-level security and object-level security logic shared by the Client (for the PoC 3 objetcs for each -RLS
+and OLS - have been estimated).
+Development environment only for PoC.
+Performance benchmarking against current Qlik implementation included.
+Cost estimation for production scale included.
+Metadata driven load will be implemented if possible.
+O U T O F S CO P E
+Full enterprise migration (250 applications) - PoC limited to 1 application
+SAP ERP modules or upstream process re-engineering
+Data Quality implementation and tooling
+Data Governance framework implementation
+Advanced data science or ML use cases (confirmed not needed at this point )
+Real-time streaming data ingestion
+Hardware procurement or non-Azure cloud providers
+Network and security infrastructure implementation (public environment assumed)
+Formal training programs (documentation and handover provided)
+Complex DAX measures implementation beyond basic semantic model
+CI/CD pipeline implementation
+NPrinting full feature replication (paginated reporting evaluation only
+Migration of all 250 applications and 1700 objects
+Historical data beyond agreed refresh window
