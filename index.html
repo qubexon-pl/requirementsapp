@@ -589,6 +589,16 @@
     }
 
     // ===== Utilities =====
+    function htmlToText(html){
+      if(!html) return '';
+      html = html.replace(/<\s*br\s*\/?>/gi, '\n')
+                 .replace(/<\/p>/gi, '\n')
+                 .replace(/<\/li>/gi, '\n- ')
+                 .replace(/<\/?ul>|<\/?ol>|<\/?strong>|<\/?em>|<\/?b>|<\/?i>|<\/?u>|<\/?span>|<\/?div>|<\/?p>|<\/?h\d>|<\/?section>|<\/?figure>|<\/?img[^>]*>/gi, '');
+      html = html.replace(/<[^>]+>/g, '');
+      return html.replace(/\n{3,}/g, '\n\n').trim();
+    }
+
     var TYPES = ['General','Functional','Non-functional'];
     var FORM_STORAGE_KEY = 'reqgen:bootstrap:rte:onecol:v11'; // new namespace
 
@@ -614,8 +624,40 @@
       });
     }
 
+    function createDynamicRte(placeholder, initialHTML){
+      var editorId = 'rte_' + Math.random().toString(36).slice(2);
+      var toolbar = document.createElement('div');
+      toolbar.className = 'rte-toolbar';
+      toolbar.setAttribute('data-target', editorId);
+      var editor = document.createElement('div');
+      editor.className = 'rte';
+      editor.id = editorId;
+      editor.setAttribute('contenteditable', 'true');
+      editor.setAttribute('data-placeholder', placeholder || '');
+      editor.innerHTML = initialHTML || '';
+      buildToolbar(toolbar);
+      return { toolbar: toolbar, editor: editor };
+    }
+
+    function getWorkpackageFieldValue(item, field){
+      var el = item ? item.querySelector('.workpackage-' + field) : null;
+      return el ? (el.innerHTML || '').trim() : '';
+    }
+
+    function getWorkpackageMetaGroup(item, field){
+      var html = getWorkpackageFieldValue(item, field);
+      return { field: field, html: html, text: htmlToText(html) };
+    }
+
+    function getWorkpackageMetaGroups(item){
+      return ['constraints','assumptions','outOfScope','deliverables','stakeholders'].map(function(field){
+        return getWorkpackageMetaGroup(item, field);
+      });
+    }
+
     // ===== Workpackages UI =====
-    function createWorkpackageItem(initialId, initialName){
+    function createWorkpackageItem(initialId, initialName, initialMeta){
+      initialMeta = initialMeta || {};
       var wrap=document.createElement('div');
       wrap.className='workpackage-item bg-body-tertiary rounded-3 p-3 mb-2';
       var row=document.createElement('div'); row.className='row g-2 align-items-start';
@@ -646,16 +688,34 @@
       summary.textContent='Total estimation: 0 h (0 requirements)';
       colSummary.appendChild(summary);
 
+      var metaCol=document.createElement('div'); metaCol.className='col-12';
+      var metaWrap=document.createElement('div'); metaWrap.className='row g-3 mt-1';
+      [
+        { field:'constraints', label:'Constraints', placeholder:'Add workpackage-specific constraints...' },
+        { field:'assumptions', label:'Assumptions', placeholder:'Add workpackage-specific assumptions...' },
+        { field:'outOfScope', label:'Out of Scope', placeholder:'Define what is out of scope for this workpackage...' },
+        { field:'deliverables', label:'Deliverables', placeholder:'List workpackage deliverables...' },
+        { field:'stakeholders', label:'Stakeholders', placeholder:'List workpackage stakeholders...' }
+      ].forEach(function(meta){
+        var metaItem=document.createElement('div'); metaItem.className='col-12 col-xl-6';
+        var label=document.createElement('label'); label.className='form-label'; label.textContent=meta.label;
+        var rte=createDynamicRte(meta.placeholder, initialMeta[meta.field] || '');
+        rte.editor.classList.add('workpackage-' + meta.field);
+        metaItem.append(label, rte.toolbar, rte.editor);
+        metaWrap.appendChild(metaItem);
+      });
+      metaCol.appendChild(metaWrap);
+
       idInput.addEventListener('input', function(){ refreshWorkpackageOptions(); updateWorkpackageTotals(); });
       nameInput.addEventListener('input', function(){ refreshWorkpackageOptions(); updateWorkpackageTotals(); });
 
-      row.append(colId,colName,colRem,colSummary);
+      row.append(colId,colName,colRem,colSummary,metaCol);
       wrap.append(row);
       return wrap;
     }
 
-    function addWorkpackage(id,name){
-      document.getElementById('workpackageList').appendChild(createWorkpackageItem(id,name));
+    function addWorkpackage(id,name,meta){
+      document.getElementById('workpackageList').appendChild(createWorkpackageItem(id,name,meta));
       refreshWorkpackageOptions();
     }
 
@@ -663,9 +723,16 @@
       return [].slice.call(document.querySelectorAll('.workpackage-item')).map(function(item){
         return {
           id: (item.querySelector('.workpackage-id').value || '').trim(),
-          name: (item.querySelector('.workpackage-name').value || '').trim()
+          name: (item.querySelector('.workpackage-name').value || '').trim(),
+          constraints: getWorkpackageFieldValue(item, 'constraints'),
+          assumptions: getWorkpackageFieldValue(item, 'assumptions'),
+          outOfScope: getWorkpackageFieldValue(item, 'outOfScope'),
+          deliverables: getWorkpackageFieldValue(item, 'deliverables'),
+          stakeholders: getWorkpackageFieldValue(item, 'stakeholders')
         };
-      }).filter(function(wp){ return wp.id || wp.name; });
+      }).filter(function(wp){
+        return wp.id || wp.name || wp.constraints || wp.assumptions || wp.outOfScope || wp.deliverables || wp.stakeholders;
+      });
     }
 
     function getWorkpackageLabel(wp, fallbackIndex){
@@ -900,7 +967,7 @@
         setHTML('notes', d.notes||'');
         document.getElementById('workpackageList').innerHTML='';
         if(Array.isArray(d.workpackages) && d.workpackages.length){
-          d.workpackages.forEach(function(w){ addWorkpackage(w.id||'', w.name||''); });
+          d.workpackages.forEach(function(w){ addWorkpackage(w.id||'', w.name||'', w); });
         } else {
           addWorkpackage('Workpackage 1','Assessment');
         }
@@ -969,14 +1036,21 @@
         return {
           key: (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim(),
           label: getWorkpackageLabel(wp, idx+1),
-          grouped: {'General':[],'Functional':[],'Non-functional':[]}
+          grouped: {'General':[],'Functional':[],'Non-functional':[]},
+          metaGroups: [
+            { field:'constraints', html: sanitize(wp.constraints || ''), text: htmlToText(wp.constraints || '') },
+            { field:'assumptions', html: sanitize(wp.assumptions || ''), text: htmlToText(wp.assumptions || '') },
+            { field:'outOfScope', html: sanitize(wp.outOfScope || ''), text: htmlToText(wp.outOfScope || '') },
+            { field:'deliverables', html: sanitize(wp.deliverables || ''), text: htmlToText(wp.deliverables || '') },
+            { field:'stakeholders', html: sanitize(wp.stakeholders || ''), text: htmlToText(wp.stakeholders || '') }
+          ]
         };
       });
-      var unassigned = { label:'Unassigned', grouped:{'General':[],'Functional':[],'Non-functional':[]} };
+      var unassigned = { label:'Unassigned', grouped:{'General':[],'Functional':[],'Non-functional':[]}, metaGroups:[] };
       reqItems.forEach(function(item){
         var grp = workpackageGroups.find(function(wp){ return wp.key === item.workpackage; });
         if(!grp && item.workpackage){
-          grp = { key:item.workpackage, label:item.workpackage, grouped:{'General':[],'Functional':[],'Non-functional':[]} };
+          grp = { key:item.workpackage, label:item.workpackage, grouped:{'General':[],'Functional':[],'Non-functional':[]}, metaGroups:[] };
           workpackageGroups.push(grp);
         }
         (grp || unassigned).grouped[item.type].push(item);
@@ -987,12 +1061,20 @@
           return '<li>' + sanitize(item.html) + '</li>';
         }).join('') + '</ul>';
       }
+      function renderMetaList(wp){
+        var labels = { constraints:'Constraints', assumptions:'Assumptions', outOfScope:'Out of Scope', deliverables:'Deliverables', stakeholders:'Stakeholders' };
+        return (wp.metaGroups || []).filter(function(group){ return group.text; }).map(function(group){
+          return '<div class="mb-2"><strong>' + labels[group.field] + ':</strong><div>' + group.html + '</div></div>';
+        }).join('');
+      }
       function renderWorkpackageBlock(wp){
         var hasAny = wp.grouped.General.length || wp.grouped.Functional.length || wp.grouped['Non-functional'].length;
-        if(!hasAny) return '';
+        var metaHtml = renderMetaList(wp);
+        if(!hasAny && !metaHtml) return '';
         var allItems = wp.grouped.General.concat(wp.grouped.Functional, wp.grouped['Non-functional']);
         var totalHours = allItems.reduce(function(sum, item){ return sum + parseEstimateHours(item.estimateHours); }, 0);
         return '<div class="mb-3"><h3 class="h5 mt-3">' + sanitize(wp.label) + ' <span class="small text-body-secondary">(Total estimation: ' + totalHours + ' h)</span></h3>'
+          + metaHtml
           + renderTypeList(wp.grouped, 'General')
           + renderTypeList(wp.grouped, 'Functional')
           + renderTypeList(wp.grouped, 'Non-functional')
@@ -1074,7 +1156,14 @@
         ? workpackages.map(function(wp, idx){
             var key = (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim();
             var total = reqItemsForTotals.filter(function(r){ return r.workpackage === key; }).reduce(function(sum, r){ return sum + r.estimateHours; }, 0);
-            return (idx+1)+'. ' + getWorkpackageLabel(wp, idx+1) + ' (Total estimation: ' + total + ' h)';
+            var metaText = [
+              wp.constraints ? 'Constraints: ' + htmlToText(wp.constraints) : '',
+              wp.assumptions ? 'Assumptions: ' + htmlToText(wp.assumptions) : '',
+              wp.outOfScope ? 'Out of Scope: ' + htmlToText(wp.outOfScope) : '',
+              wp.deliverables ? 'Deliverables: ' + htmlToText(wp.deliverables) : '',
+              wp.stakeholders ? 'Stakeholders: ' + htmlToText(wp.stakeholders) : ''
+            ].filter(Boolean).join(' | ');
+            return (idx+1)+'. ' + getWorkpackageLabel(wp, idx+1) + ' (Total estimation: ' + total + ' h)' + (metaText ? ' — ' + metaText : '');
           }).join('\n')
         : '—';
       fields.push(['Workpackages', workpackageText]);
@@ -1189,7 +1278,7 @@
       // WORKPACKAGES
       var workpackages = getWorkpackages();
       workpackages.forEach(function(wp, idx){
-        rows.push(['workpackage', String(idx), wp.id || '', wp.name || '']);
+        rows.push(['workpackage', String(idx), wp.id || '', JSON.stringify({ name: wp.name || '', constraints: wp.constraints || '', assumptions: wp.assumptions || '', outOfScope: wp.outOfScope || '', deliverables: wp.deliverables || '', stakeholders: wp.stakeholders || '' })]);
       });
       return rows;
     }
@@ -1291,7 +1380,13 @@
               return ai - bi;
             });
             wpRows.forEach(function(rw){
-              addWorkpackage(rw[idxValue] || '', (idxExtra !== -1 ? rw[idxExtra] : '') || '');
+              var wpMeta = {};
+              try {
+                wpMeta = JSON.parse((idxExtra !== -1 ? rw[idxExtra] : '') || '{}') || {};
+              } catch(_e) {
+                wpMeta = { name: (idxExtra !== -1 ? rw[idxExtra] : '') || '' };
+              }
+              addWorkpackage(rw[idxValue] || '', wpMeta.name || '', wpMeta);
             });
           } else if (typeof addWorkpackage === 'function') {
             addWorkpackage('Workpackage 1', 'Assessment');
@@ -1419,7 +1514,7 @@
       // WORKPACKAGES
       var workpackages = getWorkpackages();
       workpackages.forEach(function(wp, idx){
-        rows.push(['workpackage', String(idx), wp.id || '', wp.name || '']);
+        rows.push(['workpackage', String(idx), wp.id || '', JSON.stringify({ name: wp.name || '', constraints: wp.constraints || '', assumptions: wp.assumptions || '', outOfScope: wp.outOfScope || '', deliverables: wp.deliverables || '', stakeholders: wp.stakeholders || '' })]);
       });
       return rows;
     }
@@ -1501,7 +1596,13 @@
               return ai - bi;
             });
             wpRows.forEach(function(rw){
-              addWorkpackage(rw[idxValue] || '', (idxExtra !== -1 ? rw[idxExtra] : '') || '');
+              var wpMeta = {};
+              try {
+                wpMeta = JSON.parse((idxExtra !== -1 ? rw[idxExtra] : '') || '{}') || {};
+              } catch(_e) {
+                wpMeta = { name: (idxExtra !== -1 ? rw[idxExtra] : '') || '' };
+              }
+              addWorkpackage(rw[idxValue] || '', wpMeta.name || '', wpMeta);
             });
           } else if (typeof addWorkpackage === 'function') {
             addWorkpackage('Workpackage 1', 'Assessment');
@@ -1641,7 +1742,7 @@
     var wpList = document.getElementById('workpackageList');
     if (wpList) wpList.innerHTML = '';
     if (Array.isArray(d.workpackages) && d.workpackages.length && typeof window.addWorkpackage === 'function'){
-      d.workpackages.forEach(function(w){ window.addWorkpackage(w.id || '', w.name || ''); });
+      d.workpackages.forEach(function(w){ window.addWorkpackage(w.id || '', w.name || '', w); });
     } else if (typeof window.addWorkpackage === 'function') {
       window.addWorkpackage('Workpackage 1', 'Assessment');
     }
