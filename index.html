@@ -407,49 +407,10 @@
     <div id="editableRoot" contenteditable="false">
       <div id="content">
         <header class="mb-4"><h1 class="h3 text-primary">[[PROJECT_NAME_ESC]]</h1></header>
-        <section class="mb-4"><h2 class="text-primary h4">Company Description</h2><div>[[COMPANY_DESC_HTML]]</div></section>
-        <section class="mb-4"><h2 class="text-primary h4">Current Landscape Description</h2><div>[[CURRENT_LANDSCAPE_HTML]]</div></section>
-        <section class="mb-4"><h2 class="text-primary h4">Stakeholders</h2><div>[[STAKEHOLDERS_HTML]]</div></section>
-        <section class="mb-4"><h2 class="text-primary h4">Goals &amp; Objectives</h2><div>[[GOALS_HTML]]</div></section>
 
-        <!-- Project Architecture placed directly after Goals & Objectives -->
-        <section class="mb-4">
-          <h2 class="text-primary h4">Project Architecture</h2>
-          <div class="mb-3 text-center">
-            <img class="diagram-img img-fluid" src="[[DIAGRAM_DATA_URL]]" alt="Architecture diagram" onerror="this.style.display='none'">
-          </div>
-          <div class="mb-2">
-            <strong>Description</strong>
-            <div>[[ARCH_DESC_HTML]]</div>
-          </div>
-        </section>
+        [[GENERAL_PROJECT_DETAILS_HTML]]
 
-        [[REQS_SECTION_HTML]]
-
-        <section class="mb-4"><h2 class="text-primary h4">Constraints</h2><div>[[CONSTRAINTS_HTML]]</div></section>
-        <section class="mb-4"><h2 class="text-primary h4">Assumptions</h2><div>[[ASSUMPTIONS_HTML]]</div></section>
-        <section class="mb-4"><h2 class="text-primary h4">Out of Scope</h2><div>[[OUTOFSCOPE_HTML]]</div></section>
-
-        <section class="mb-4">
-          <h2 class="text-primary h4">Time &amp; Cost</h2>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="metric-label mb-2"><i class="bi bi-calendar-week fs-5"></i><span>Timeline (weeks)</span></div>
-              <div class="metric-box" data-editable="true">[[TIMELINE_HTML]]</div>
-            </div>
-            <div class="col-md-6">
-              <div class="metric-label mb-2"><i class="bi bi-stopwatch fs-5"></i><span>Cost (hours)</span></div>
-              <div class="metric-box" data-editable="true">[[COST_HTML]]</div>
-            </div>
-          </div>
-          <div class="mt-3">
-            <strong>Description</strong>
-            <div>[[TIMECOST_DESC_HTML]]</div>
-          </div>
-        </section>
-
-        <section class="mb-4"><h2 class="text-primary h4">Deliverables</h2><div>[[DELIVERABLES_HTML]]</div></section>
-        <section class="mb-4"><h2 class="text-primary h4">Additional Notes</h2><div>[[NOTES_HTML]]</div></section>
+        [[WORKPACKAGES_SECTION_HTML]]
       </div>
     </div>
   </main>
@@ -1185,15 +1146,15 @@
           label: getWorkpackageLabel(wp, idx+1),
           grouped: {'General':[],'Functional':[],'Non-functional':[]},
           metaGroups: [
-            { field:'constraints', html: sanitize(wp.constraints || ''), text: htmlToText(wp.constraints || '') },
-            { field:'assumptions', html: sanitize(wp.assumptions || ''), text: htmlToText(wp.assumptions || '') },
-            { field:'outOfScope', html: sanitize(wp.outOfScope || ''), text: htmlToText(wp.outOfScope || '') },
-            { field:'deliverables', html: sanitize(wp.deliverables || ''), text: htmlToText(wp.deliverables || '') },
-            { field:'stakeholders', html: sanitize(wp.stakeholders || ''), text: htmlToText(wp.stakeholders || '') }
+            { field:'stakeholders', title:'Stakeholders', html: sanitize(wp.stakeholders || ''), text: htmlToText(wp.stakeholders || '') },
+            { field:'constraints', title:'Constraints', html: sanitize(wp.constraints || ''), text: htmlToText(wp.constraints || '') },
+            { field:'assumptions', title:'Assumptions', html: sanitize(wp.assumptions || ''), text: htmlToText(wp.assumptions || '') },
+            { field:'outOfScope', title:'Out of Scope', html: sanitize(wp.outOfScope || ''), text: htmlToText(wp.outOfScope || '') },
+            { field:'deliverables', title:'Deliverables', html: sanitize(wp.deliverables || ''), text: htmlToText(wp.deliverables || '') }
           ]
         };
       });
-      var unassigned = { label:'Unassigned', grouped:{'General':[],'Functional':[],'Non-functional':[]}, metaGroups:[] };
+      var unassigned = { key:'', label:'Unassigned', grouped:{'General':[],'Functional':[],'Non-functional':[]}, metaGroups:[] };
       reqItems.forEach(function(item){
         var grp = workpackageGroups.find(function(wp){ return wp.key === item.workpackage; });
         if(!grp && item.workpackage){
@@ -1202,43 +1163,90 @@
         }
         (grp || unassigned).grouped[item.type].push(item);
       });
+      function renderSection(title, body){
+        if(!htmlToText(body || '')) return '';
+        return '<section class="mb-4"><h3 class="text-primary h5">' + title + '</h3><div>' + body + '</div></section>';
+      }
       function renderTypeList(grouped, type){
         if(!grouped[type].length) return '';
-        return '<h4 class="h6 mt-2">' + type + '</h4><ul class="ps-3">' + grouped[type].map(function(item){
-          return '<li>' + sanitize(item.html) + '</li>';
-        }).join('') + '</ul>';
+        return '<div class="mt-3"><h4 class="h6">' + type + '</h4><ul class="ps-3 mb-0">' + grouped[type].map(function(item){
+          var estimate = item.estimateHours ? ' <span class="small text-body-secondary">(' + item.estimateHours + ' h)</span>' : '';
+          return '<li>' + sanitize(item.html) + estimate + '</li>';
+        }).join('') + '</ul></div>';
       }
-      function renderSectionWorkpackageDetails(field){
-        var matching = workpackageGroups.filter(function(wp){
-          return (wp.metaGroups || []).some(function(group){ return group.field === field && group.text; });
-        });
-        if(!matching.length) return '';
-        return '<div class="mt-3">' + matching.map(function(wp){
-          var group = (wp.metaGroups || []).find(function(meta){ return meta.field === field && meta.text; });
-          return '<div class="mb-3"><h3 class="h6 mb-2">' + sanitize(wp.label) + '</h3><div>' + group.html + '</div></div>';
-        }).join('') + '</div>';
+      function renderArchitectureSection(){
+        var hasDescription = htmlToText(archDesc || '');
+        var hasDiagram = !!(diagramDataUrl || '');
+        if(!hasDescription && !hasDiagram) return '';
+        return [
+          '<section class="mb-4">',
+          '<h3 class="text-primary h5">Project Architecture</h3>',
+          hasDiagram ? '<div class="mb-3 text-center"><img class="diagram-img img-fluid" src="' + (diagramDataUrl || '') + '" alt="Architecture diagram" onerror="this.style.display=\'none\'"></div>' : '',
+          hasDescription ? '<div><strong>Description</strong><div>' + archDesc + '</div></div>' : '',
+          '</section>'
+        ].join('');
+      }
+      function renderTimeCostSection(){
+        var hasTimeline = htmlToText(timeline || '');
+        var hasCost = htmlToText(cost || '');
+        var hasDescription = htmlToText(timeCostDesc || '');
+        if(!hasTimeline && !hasCost && !hasDescription) return '';
+        return [
+          '<section class="mb-4">',
+          '<h3 class="text-primary h5">Time &amp; Cost</h3>',
+          '<div class="row g-3">',
+          '<div class="col-md-6">',
+          '<div class="metric-label mb-2"><i class="bi bi-calendar-week fs-5"></i><span>Timeline (weeks)</span></div>',
+          '<div class="metric-box" data-editable="true">' + (timeline || '—') + '</div>',
+          '</div>',
+          '<div class="col-md-6">',
+          '<div class="metric-label mb-2"><i class="bi bi-stopwatch fs-5"></i><span>Cost (hours)</span></div>',
+          '<div class="metric-box" data-editable="true">' + (cost || '—') + '</div>',
+          '</div>',
+          '</div>',
+          hasDescription ? '<div class="mt-3"><strong>Description</strong><div>' + timeCostDesc + '</div></div>' : '',
+          '</section>'
+        ].join('');
       }
       function renderWorkpackageBlock(wp){
-        var hasAny = wp.grouped.General.length || wp.grouped.Functional.length || wp.grouped['Non-functional'].length;
-        if(!hasAny) return '';
-        var allItems = wp.grouped.General.concat(wp.grouped.Functional, wp.grouped['Non-functional']);
-        var totalHours = allItems.reduce(function(sum, item){ return sum + parseEstimateHours(item.estimateHours); }, 0);
-        return '<div class="mb-3"><h3 class="h5 mt-3">' + sanitize(wp.label) + ' <span class="small text-body-secondary">(Total estimation: ' + totalHours + ' h)</span></h3>'
-          + renderTypeList(wp.grouped, 'General')
+        var requirementMarkup = renderTypeList(wp.grouped, 'General')
           + renderTypeList(wp.grouped, 'Functional')
-          + renderTypeList(wp.grouped, 'Non-functional')
-          + '</div>';
+          + renderTypeList(wp.grouped, 'Non-functional');
+        var totalHours = wp.grouped.General.concat(wp.grouped.Functional, wp.grouped['Non-functional']).reduce(function(sum, item){ return sum + parseEstimateHours(item.estimateHours); }, 0);
+        var detailMarkup = (wp.metaGroups || []).map(function(group){
+          if(!group.text) return '';
+          return '<section class="mb-3"><h4 class="h6 text-primary">' + group.title + '</h4><div>' + group.html + '</div></section>';
+        }).join('');
+        if(!requirementMarkup && !detailMarkup) return '';
+        return [
+          '<section class="mb-4">',
+          '<h3 class="text-primary h4">' + sanitize(wp.label) + (totalHours ? ' <span class="small text-body-secondary">(Total estimation: ' + totalHours + ' h)</span>' : '') + '</h3>',
+          detailMarkup,
+          requirementMarkup ? '<section class="mb-3"><h4 class="h6 text-primary">Requirements</h4>' + requirementMarkup + '</section>' : '',
+          '</section>'
+        ].join('');
       }
+      var generalProjectDetailsHTML = [
+        '<section class="mb-5">',
+        '<h2 class="text-primary h4">General Project Details</h2>',
+        renderSection('Company Description', companyDesc),
+        renderSection('Current Landscape Description', currentLandscape),
+        renderSection('Stakeholders', stakeholders),
+        renderSection('Goals &amp; Objectives', goals),
+        renderArchitectureSection(),
+        renderSection('Constraints', constraints),
+        renderSection('Assumptions', assumptions),
+        renderSection('Out of Scope', outOfScope),
+        renderTimeCostSection(),
+        renderSection('Deliverables', deliverables),
+        renderSection('Additional Notes', notes),
+        '</section>'
+      ].join('');
       var wpBlocks = workpackageGroups.map(renderWorkpackageBlock).join('') + renderWorkpackageBlock(unassigned);
-      stakeholders += renderSectionWorkpackageDetails('stakeholders');
-      constraints += renderSectionWorkpackageDetails('constraints');
-      assumptions += renderSectionWorkpackageDetails('assumptions');
-      outOfScope += renderSectionWorkpackageDetails('outOfScope');
-      deliverables += renderSectionWorkpackageDetails('deliverables');
-      var reqSectionHTML = [
+      var workpackagesSectionHTML = [
         '<section class="mb-4">',
-        '<h2 class="text-primary h4">Requirements</h2>',
-        (wpBlocks || '<p class="text-body-secondary"><em>No requirements provided.</em></p>'),
+        '<h2 class="text-primary h4">Workpackages</h2>',
+        (wpBlocks || '<p class="text-body-secondary"><em>No workpackage-specific details provided.</em></p>'),
         '</section>'
       ].join('\n');
 
@@ -1249,20 +1257,8 @@
       var html = tmpl
         .split('[[PROJECT_NAME_ESC]]').join(projectNameEsc)
         .replace('[[DOC_INSTANCE_ID]]', docInstanceId)
-        .replace('[[COMPANY_DESC_HTML]]', companyDesc)
-        .replace('[[STAKEHOLDERS_HTML]]', stakeholders)
-        .replace('[[CURRENT_LANDSCAPE_HTML]]', currentLandscape)
-        .replace('[[GOALS_HTML]]', goals)
-        .replace('[[REQS_SECTION_HTML]]', reqSectionHTML)
-        .replace('[[CONSTRAINTS_HTML]]', constraints)
-        .replace('[[ASSUMPTIONS_HTML]]', assumptions)
-        .replace('[[OUTOFSCOPE_HTML]]', outOfScope)
-        .replace('[[TIMELINE_HTML]]', timeline)
-        .replace('[[COST_HTML]]', cost)
-        .replace('[[TIMECOST_DESC_HTML]]', timeCostDesc)
-        .replace('[[ARCH_DESC_HTML]]', archDesc)
-        .replace('[[DELIVERABLES_HTML]]', deliverables)
-        .replace('[[NOTES_HTML]]', notes)
+        .replace('[[GENERAL_PROJECT_DETAILS_HTML]]', generalProjectDetailsHTML)
+        .replace('[[WORKPACKAGES_SECTION_HTML]]', workpackagesSectionHTML)
         .replace('[[LOGO_DATA_URL]]', logoDataUrl || '')
         .replace('[[DIAGRAM_DATA_URL]]', diagramDataUrl || '');
 
