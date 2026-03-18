@@ -212,10 +212,17 @@
               <div id="timeCostDesc" class="rte" contenteditable="true" data-placeholder="Explain how timeline and cost were estimated..."></div>
             </div>
 
-            <div class="mt-3">
-              <label class="form-label">Stakeholders</label>
+            <div class="mt-3 section-workpackage-block" data-field="stakeholders">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <label class="form-label mb-0">Stakeholders</label>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <select class="form-select form-select-sm section-workpackage-select" data-field="stakeholders" style="width:auto; min-width: 220px;"></select>
+                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="stakeholders"><i class="bi bi-plus-square"></i> Add stakeholders to</button>
+                </div>
+              </div>
               <div class="rte-toolbar" data-target="stakeholders"></div>
               <div id="stakeholders" class="rte" contenteditable="true" data-placeholder="List key stakeholders..."></div>
+              <div class="section-workpackage-list mt-3" data-field="stakeholders"></div>
             </div>
 
             <div class="mt-3">
@@ -245,28 +252,56 @@
               <div id="reqList" class="mt-3"></div>
             </div>
 
-            <div class="mt-3">
-              <label class="form-label">Constraints</label>
+            <div class="mt-3 section-workpackage-block" data-field="constraints">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <label class="form-label mb-0">Constraints</label>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <select class="form-select form-select-sm section-workpackage-select" data-field="constraints" style="width:auto; min-width: 220px;"></select>
+                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="constraints"><i class="bi bi-plus-square"></i> Add constraints to</button>
+                </div>
+              </div>
               <div class="rte-toolbar" data-target="constraints"></div>
               <div id="constraints" class="rte" contenteditable="true" data-placeholder="Time, technology, budget, compliance, etc."></div>
+              <div class="section-workpackage-list mt-3" data-field="constraints"></div>
             </div>
 
-            <div class="mt-3">
-              <label class="form-label">Assumptions</label>
+            <div class="mt-3 section-workpackage-block" data-field="assumptions">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <label class="form-label mb-0">Assumptions</label>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <select class="form-select form-select-sm section-workpackage-select" data-field="assumptions" style="width:auto; min-width: 220px;"></select>
+                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="assumptions"><i class="bi bi-plus-square"></i> Add assumptions to</button>
+                </div>
+              </div>
               <div class="rte-toolbar" data-target="assumptions"></div>
               <div id="assumptions" class="rte" contenteditable="true" data-placeholder="What assumptions are you making?"></div>
+              <div class="section-workpackage-list mt-3" data-field="assumptions"></div>
             </div>
 
-            <div class="mt-3">
-              <label class="form-label">Out of Scope</label>
+            <div class="mt-3 section-workpackage-block" data-field="outOfScope">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <label class="form-label mb-0">Out of Scope</label>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <select class="form-select form-select-sm section-workpackage-select" data-field="outOfScope" style="width:auto; min-width: 220px;"></select>
+                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="outOfScope"><i class="bi bi-plus-square"></i> Add out of scope to</button>
+                </div>
+              </div>
               <div class="rte-toolbar" data-target="outOfScope"></div>
               <div id="outOfScope" class="rte" contenteditable="true" data-placeholder="What is explicitly not included?"></div>
+              <div class="section-workpackage-list mt-3" data-field="outOfScope"></div>
             </div>
 
-            <div class="mt-3">
-              <label class="form-label">Deliverables</label>
+            <div class="mt-3 section-workpackage-block" data-field="deliverables">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <label class="form-label mb-0">Deliverables</label>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <select class="form-select form-select-sm section-workpackage-select" data-field="deliverables" style="width:auto; min-width: 220px;"></select>
+                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="deliverables"><i class="bi bi-plus-square"></i> Add deliverables to</button>
+                </div>
+              </div>
               <div class="rte-toolbar" data-target="deliverables"></div>
               <div id="deliverables" class="rte" contenteditable="true" data-placeholder="List the deliverables (e.g., HLD, Fabric artifacts, best practices guide, post-implementation docs)..."></div>
+              <div class="section-workpackage-list mt-3" data-field="deliverables"></div>
             </div>
 
             <div class="mt-3">
@@ -639,19 +674,114 @@
       return { toolbar: toolbar, editor: editor };
     }
 
-    function getWorkpackageFieldValue(item, field){
-      var el = item ? item.querySelector('.workpackage-' + field) : null;
-      return el ? (el.innerHTML || '').trim() : '';
+    var SECTION_WORKPACKAGE_FIELDS = ['constraints','assumptions','outOfScope','deliverables','stakeholders'];
+
+    function getWorkpackageKeyFromItem(item, fallbackIndex){
+      if(!item) return '';
+      var id = ((item.querySelector('.workpackage-id') || {}).value || '').trim();
+      var name = ((item.querySelector('.workpackage-name') || {}).value || '').trim();
+      return (id || name || ('Workpackage ' + (fallbackIndex || 1))).trim();
     }
 
-    function getWorkpackageMetaGroup(item, field){
-      var html = getWorkpackageFieldValue(item, field);
+    function findSectionWorkpackageEntry(field, workpackageKey){
+      return document.querySelector('.section-workpackage-entry[data-field="' + field + '"][data-workpackage-key="' + CSS.escape(workpackageKey || '') + '"]');
+    }
+
+    function getWorkpackageFieldValue(item, field, fallbackIndex){
+      var workpackageKey = getWorkpackageKeyFromItem(item, fallbackIndex);
+      var el = findSectionWorkpackageEntry(field, workpackageKey);
+      var editor = el ? el.querySelector('.section-workpackage-editor') : null;
+      return editor ? (editor.innerHTML || '').trim() : '';
+    }
+
+    function createSectionWorkpackageEntry(field, workpackageKey, label, initialHTML){
+      var list = document.querySelector('.section-workpackage-list[data-field="' + field + '"]');
+      if(!list || !workpackageKey) return null;
+      var existing = findSectionWorkpackageEntry(field, workpackageKey);
+      if(existing) return existing;
+      var card = document.createElement('div');
+      card.className = 'section-workpackage-entry border rounded-3 p-3 mb-2';
+      card.setAttribute('data-field', field);
+      card.setAttribute('data-workpackage-key', workpackageKey);
+      var head = document.createElement('div');
+      head.className = 'd-flex align-items-center justify-content-between gap-2 mb-2';
+      var title = document.createElement('div');
+      title.className = 'fw-semibold section-workpackage-title';
+      title.textContent = label;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-outline-danger btn-sm';
+      btn.innerHTML = '<i class="bi bi-x-lg"></i>';
+      btn.addEventListener('click', function(){ card.remove(); refreshWorkpackageOptions(); });
+      head.append(title, btn);
+      var rte = createDynamicRte('Add ' + field + ' for ' + label + '...', initialHTML || '');
+      rte.editor.classList.add('section-workpackage-editor');
+      card.append(head, rte.toolbar, rte.editor);
+      list.appendChild(card);
+      return card;
+    }
+
+    function addSectionWorkpackageField(field, workpackageKey, label, initialHTML){
+      var entry = createSectionWorkpackageEntry(field, workpackageKey, label, initialHTML);
+      if(entry){
+        var editor = entry.querySelector('.section-workpackage-editor');
+        if(editor) editor.focus();
+      }
+    }
+
+    function renameSectionWorkpackageEntries(oldKey, newKey, newLabel){
+      if(!oldKey || oldKey === newKey) return;
+      SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
+        var entry = findSectionWorkpackageEntry(field, oldKey);
+        if(entry){
+          entry.setAttribute('data-workpackage-key', newKey);
+          var title = entry.querySelector('.section-workpackage-title');
+          if(title) title.textContent = newLabel;
+        }
+      });
+    }
+
+    function refreshSectionWorkpackageUI(){
+      var workpackages = getWorkpackages();
+      var labelByKey = {};
+      workpackages.forEach(function(wp, idx){
+        labelByKey[(wp.id || wp.name || ('Workpackage ' + (idx + 1))).trim()] = getWorkpackageLabel(wp, idx + 1);
+      });
+      document.querySelectorAll('.section-workpackage-select').forEach(function(sel){
+        var prev = sel.value;
+        sel.innerHTML = '';
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = workpackages.length ? 'Select workpackage…' : 'No workpackages defined';
+        sel.appendChild(placeholder);
+        workpackages.forEach(function(wp, idx){
+          var opt = document.createElement('option');
+          opt.value = (wp.id || wp.name || ('Workpackage ' + (idx + 1))).trim();
+          opt.textContent = getWorkpackageLabel(wp, idx + 1);
+          sel.appendChild(opt);
+        });
+        sel.disabled = !workpackages.length;
+        if([].slice.call(sel.options).some(function(opt){ return opt.value === prev; })) sel.value = prev;
+      });
+      document.querySelectorAll('.section-workpackage-entry').forEach(function(entry){
+        var key = entry.getAttribute('data-workpackage-key') || '';
+        var title = entry.querySelector('.section-workpackage-title');
+        if(labelByKey[key]){
+          if(title) title.textContent = labelByKey[key];
+        } else {
+          entry.remove();
+        }
+      });
+    }
+
+    function getWorkpackageMetaGroup(item, field, fallbackIndex){
+      var html = getWorkpackageFieldValue(item, field, fallbackIndex);
       return { field: field, html: html, text: htmlToText(html) };
     }
 
-    function getWorkpackageMetaGroups(item){
-      return ['constraints','assumptions','outOfScope','deliverables','stakeholders'].map(function(field){
-        return getWorkpackageMetaGroup(item, field);
+    function getWorkpackageMetaGroups(item, fallbackIndex){
+      return SECTION_WORKPACKAGE_FIELDS.map(function(field){
+        return getWorkpackageMetaGroup(item, field, fallbackIndex);
       });
     }
 
@@ -680,55 +810,58 @@
 
       var colRem=document.createElement('div'); colRem.className='col-12 col-md-1 d-grid';
       var btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-outline-danger'; btn.innerHTML='<i class="bi bi-x-lg"></i>';
-      btn.addEventListener('click',function(){ wrap.remove(); refreshWorkpackageOptions(); updateWorkpackageTotals(); });
+      btn.addEventListener('click',function(){
+        SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
+          var existing = findSectionWorkpackageEntry(field, getWorkpackageKeyFromItem(wrap, 1));
+          if(existing) existing.remove();
+        });
+        wrap.remove(); refreshWorkpackageOptions(); updateWorkpackageTotals();
+      });
       colRem.appendChild(btn);
 
       var colSummary=document.createElement('div'); colSummary.className='col-12';
       var summary=document.createElement('div'); summary.className='small-hint workpackage-summary';
       summary.textContent='Total estimation: 0 h (0 requirements)';
       colSummary.appendChild(summary);
-
-      var metaCol=document.createElement('div'); metaCol.className='col-12';
-      var metaWrap=document.createElement('div'); metaWrap.className='row g-3 mt-1';
-      [
-        { field:'constraints', label:'Constraints', placeholder:'Add workpackage-specific constraints...' },
-        { field:'assumptions', label:'Assumptions', placeholder:'Add workpackage-specific assumptions...' },
-        { field:'outOfScope', label:'Out of Scope', placeholder:'Define what is out of scope for this workpackage...' },
-        { field:'deliverables', label:'Deliverables', placeholder:'List workpackage deliverables...' },
-        { field:'stakeholders', label:'Stakeholders', placeholder:'List workpackage stakeholders...' }
-      ].forEach(function(meta){
-        var metaItem=document.createElement('div'); metaItem.className='col-12 col-xl-6';
-        var label=document.createElement('label'); label.className='form-label'; label.textContent=meta.label;
-        var rte=createDynamicRte(meta.placeholder, initialMeta[meta.field] || '');
-        rte.editor.classList.add('workpackage-' + meta.field);
-        metaItem.append(label, rte.toolbar, rte.editor);
-        metaWrap.appendChild(metaItem);
-      });
-      metaCol.appendChild(metaWrap);
-
-      idInput.addEventListener('input', function(){ refreshWorkpackageOptions(); updateWorkpackageTotals(); });
-      nameInput.addEventListener('input', function(){ refreshWorkpackageOptions(); updateWorkpackageTotals(); });
-
-      row.append(colId,colName,colRem,colSummary,metaCol);
+      function syncWorkpackageKey(){
+        var previousKey = wrap.dataset.workpackageKey || getWorkpackageKeyFromItem(wrap, 1);
+        var currentIndex = [].slice.call(document.querySelectorAll('.workpackage-item')).indexOf(wrap) + 1;
+        var nextKey = getWorkpackageKeyFromItem(wrap, currentIndex);
+        var nextLabel = getWorkpackageLabel({ id: idInput.value || '', name: nameInput.value || '' }, currentIndex);
+        renameSectionWorkpackageEntries(previousKey, nextKey, nextLabel);
+        wrap.dataset.workpackageKey = nextKey;
+        refreshWorkpackageOptions();
+      }
+      idInput.addEventListener('input', function(){ syncWorkpackageKey(); updateWorkpackageTotals(); });
+      nameInput.addEventListener('input', function(){ syncWorkpackageKey(); updateWorkpackageTotals(); });
+      row.append(colId,colName,colRem,colSummary);
       wrap.append(row);
       return wrap;
     }
 
     function addWorkpackage(id,name,meta){
-      document.getElementById('workpackageList').appendChild(createWorkpackageItem(id,name,meta));
+      meta = meta || {};
+      var item = createWorkpackageItem(id,name,meta);
+      document.getElementById('workpackageList').appendChild(item);
+      item.dataset.workpackageKey = getWorkpackageKeyFromItem(item, document.querySelectorAll('.workpackage-item').length);
+      var workpackageKey = getWorkpackageKeyFromItem(item, document.querySelectorAll('.workpackage-item').length);
+      var label = getWorkpackageLabel({ id:id || '', name:name || '' }, document.querySelectorAll('.workpackage-item').length);
+      SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
+        if(meta[field]) addSectionWorkpackageField(field, workpackageKey, label, meta[field]);
+      });
       refreshWorkpackageOptions();
     }
 
     function getWorkpackages(){
-      return [].slice.call(document.querySelectorAll('.workpackage-item')).map(function(item){
+      return [].slice.call(document.querySelectorAll('.workpackage-item')).map(function(item, idx){
         return {
           id: (item.querySelector('.workpackage-id').value || '').trim(),
           name: (item.querySelector('.workpackage-name').value || '').trim(),
-          constraints: getWorkpackageFieldValue(item, 'constraints'),
-          assumptions: getWorkpackageFieldValue(item, 'assumptions'),
-          outOfScope: getWorkpackageFieldValue(item, 'outOfScope'),
-          deliverables: getWorkpackageFieldValue(item, 'deliverables'),
-          stakeholders: getWorkpackageFieldValue(item, 'stakeholders')
+          constraints: getWorkpackageFieldValue(item, 'constraints', idx + 1),
+          assumptions: getWorkpackageFieldValue(item, 'assumptions', idx + 1),
+          outOfScope: getWorkpackageFieldValue(item, 'outOfScope', idx + 1),
+          deliverables: getWorkpackageFieldValue(item, 'deliverables', idx + 1),
+          stakeholders: getWorkpackageFieldValue(item, 'stakeholders', idx + 1)
         };
       }).filter(function(wp){
         return wp.id || wp.name || wp.constraints || wp.assumptions || wp.outOfScope || wp.deliverables || wp.stakeholders;
@@ -806,6 +939,7 @@
         });
         if([].slice.call(wpSelect.options).some(function(o){ return o.value===prev; })) wpSelect.value=prev;
       });
+      refreshSectionWorkpackageUI();
       updateWorkpackageTotals();
     }
 
@@ -882,6 +1016,19 @@
     document.getElementById('addOne').addEventListener('click',function(){ addRequirement(); });
     document.getElementById('addThree').addEventListener('click',function(){ addRequirement(); addRequirement('Functional'); addRequirement('Non-functional'); });
     document.getElementById('addWorkpackageBtn').addEventListener('click', function(){ addWorkpackage(); });
+    document.querySelectorAll('.section-workpackage-add').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var field = btn.getAttribute('data-field');
+        var select = document.querySelector('.section-workpackage-select[data-field="' + field + '"]');
+        var workpackageKey = select ? select.value : '';
+        if(!workpackageKey){ alert('Please choose a workpackage first.'); return; }
+        var workpackages = getWorkpackages();
+        var idx = workpackages.findIndex(function(wp, i){ return (wp.id || wp.name || ('Workpackage ' + (i + 1))).trim() === workpackageKey; });
+        var label = idx >= 0 ? getWorkpackageLabel(workpackages[idx], idx + 1) : workpackageKey;
+        addSectionWorkpackageField(field, workpackageKey, label, '');
+        refreshWorkpackageOptions();
+      });
+    });
 
     function collectRequirements(){
       var items=[].slice.call(document.querySelectorAll('.req-item'));
@@ -1061,26 +1208,33 @@
           return '<li>' + sanitize(item.html) + '</li>';
         }).join('') + '</ul>';
       }
-      function renderMetaList(wp){
-        var labels = { constraints:'Constraints', assumptions:'Assumptions', outOfScope:'Out of Scope', deliverables:'Deliverables', stakeholders:'Stakeholders' };
-        return (wp.metaGroups || []).filter(function(group){ return group.text; }).map(function(group){
-          return '<div class="mb-2"><strong>' + labels[group.field] + ':</strong><div>' + group.html + '</div></div>';
-        }).join('');
+      function renderSectionWorkpackageDetails(field){
+        var matching = workpackageGroups.filter(function(wp){
+          return (wp.metaGroups || []).some(function(group){ return group.field === field && group.text; });
+        });
+        if(!matching.length) return '';
+        return '<div class="mt-3">' + matching.map(function(wp){
+          var group = (wp.metaGroups || []).find(function(meta){ return meta.field === field && meta.text; });
+          return '<div class="mb-3"><h3 class="h6 mb-2">' + sanitize(wp.label) + '</h3><div>' + group.html + '</div></div>';
+        }).join('') + '</div>';
       }
       function renderWorkpackageBlock(wp){
         var hasAny = wp.grouped.General.length || wp.grouped.Functional.length || wp.grouped['Non-functional'].length;
-        var metaHtml = renderMetaList(wp);
-        if(!hasAny && !metaHtml) return '';
+        if(!hasAny) return '';
         var allItems = wp.grouped.General.concat(wp.grouped.Functional, wp.grouped['Non-functional']);
         var totalHours = allItems.reduce(function(sum, item){ return sum + parseEstimateHours(item.estimateHours); }, 0);
         return '<div class="mb-3"><h3 class="h5 mt-3">' + sanitize(wp.label) + ' <span class="small text-body-secondary">(Total estimation: ' + totalHours + ' h)</span></h3>'
-          + metaHtml
           + renderTypeList(wp.grouped, 'General')
           + renderTypeList(wp.grouped, 'Functional')
           + renderTypeList(wp.grouped, 'Non-functional')
           + '</div>';
       }
       var wpBlocks = workpackageGroups.map(renderWorkpackageBlock).join('') + renderWorkpackageBlock(unassigned);
+      stakeholders += renderSectionWorkpackageDetails('stakeholders');
+      constraints += renderSectionWorkpackageDetails('constraints');
+      assumptions += renderSectionWorkpackageDetails('assumptions');
+      outOfScope += renderSectionWorkpackageDetails('outOfScope');
+      deliverables += renderSectionWorkpackageDetails('deliverables');
       var reqSectionHTML = [
         '<section class="mb-4">',
         '<h2 class="text-primary h4">Requirements</h2>',
@@ -1156,14 +1310,7 @@
         ? workpackages.map(function(wp, idx){
             var key = (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim();
             var total = reqItemsForTotals.filter(function(r){ return r.workpackage === key; }).reduce(function(sum, r){ return sum + r.estimateHours; }, 0);
-            var metaText = [
-              wp.constraints ? 'Constraints: ' + htmlToText(wp.constraints) : '',
-              wp.assumptions ? 'Assumptions: ' + htmlToText(wp.assumptions) : '',
-              wp.outOfScope ? 'Out of Scope: ' + htmlToText(wp.outOfScope) : '',
-              wp.deliverables ? 'Deliverables: ' + htmlToText(wp.deliverables) : '',
-              wp.stakeholders ? 'Stakeholders: ' + htmlToText(wp.stakeholders) : ''
-            ].filter(Boolean).join(' | ');
-            return (idx+1)+'. ' + getWorkpackageLabel(wp, idx+1) + ' (Total estimation: ' + total + ' h)' + (metaText ? ' — ' + metaText : '');
+            return (idx+1)+'. ' + getWorkpackageLabel(wp, idx+1) + ' (Total estimation: ' + total + ' h)';
           }).join('\n')
         : '—';
       fields.push(['Workpackages', workpackageText]);
@@ -1183,15 +1330,23 @@
       if(req['Non-functional'].length) reqText += 'Non-functional:\n' + joinList(req['Non-functional']) + '\n\n';
       fields.push(['Requirements', reqText.trim() || '—']);
 
-      fields.push(['Constraints',  htmlToText(getHTML('constraints'))]);
-      fields.push(['Assumptions',  htmlToText(getHTML('assumptions'))]);
-      fields.push(['Out of Scope', htmlToText(getHTML('outOfScope'))]);
+      function buildSectionDetailText(field){
+        return workpackages.map(function(wp, idx){
+          var detailText = htmlToText(wp[field] || '');
+          if(!detailText) return '';
+          return getWorkpackageLabel(wp, idx + 1) + ': ' + detailText;
+        }).filter(Boolean).join('\n');
+      }
+      fields.push(['Constraints',  [htmlToText(getHTML('constraints')), buildSectionDetailText('constraints')].filter(Boolean).join('\n')]);
+      fields.push(['Assumptions',  [htmlToText(getHTML('assumptions')), buildSectionDetailText('assumptions')].filter(Boolean).join('\n')]);
+      fields.push(['Out of Scope', [htmlToText(getHTML('outOfScope')), buildSectionDetailText('outOfScope')].filter(Boolean).join('\n')]);
 
       fields.push(['Timeline (weeks)', htmlToText(getHTML('timeline'))]);
       fields.push(['Cost (hours)',     htmlToText(getHTML('cost'))]);
       fields.push(['Time & Cost - Description', htmlToText(getHTML('timeCostDesc'))]);
 
-      fields.push(['Deliverables', htmlToText(getHTML('deliverables'))]);
+      fields.push(['Deliverables', [htmlToText(getHTML('deliverables')), buildSectionDetailText('deliverables')].filter(Boolean).join('\n')]);
+      fields[1][1] = [fields[1][1], buildSectionDetailText('stakeholders')].filter(Boolean).join('\n');
       fields.push(['Additional Notes', htmlToText(getHTML('notes'))]);
 
       const { Document, Packer, Paragraph, HeadingLevel } = window.docx;
