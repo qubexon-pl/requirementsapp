@@ -243,7 +243,7 @@
 
             <div class="border rounded-3 p-3 mt-3">
               
-              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements</h5><div class="btn-group ms-auto" role="group">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements (Inclusions)</h5><div class="btn-group ms-auto" role="group">
                   <button type="button" class="btn btn-outline-secondary" id="addThree"><i class="bi bi-plus-lg"></i> Add 3 blank requirements</button>
                   <button type="button" class="btn btn-primary" id="addOne"><i class="bi bi-plus-square"></i> Add requirement</button>
                 </div>
@@ -254,10 +254,10 @@
 
             <div class="mt-3 section-workpackage-block" data-field="constraints">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                <label class="form-label mb-0">Constraints</label>
+                <label class="form-label mb-0">Dependencies</label>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                   <select class="form-select form-select-sm section-workpackage-select" data-field="constraints" style="width:auto; min-width: 220px;"></select>
-                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="constraints"><i class="bi bi-plus-square"></i> Add constraints to</button>
+                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="constraints"><i class="bi bi-plus-square"></i> Add dependencies to</button>
                 </div>
               </div>
               <div class="rte-toolbar" data-target="constraints"></div>
@@ -280,10 +280,10 @@
 
             <div class="mt-3 section-workpackage-block" data-field="outOfScope">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                <label class="form-label mb-0">Out of Scope</label>
+                <label class="form-label mb-0">Out of Scope (Exclusions)</label>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                   <select class="form-select form-select-sm section-workpackage-select" data-field="outOfScope" style="width:auto; min-width: 220px;"></select>
-                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="outOfScope"><i class="bi bi-plus-square"></i> Add out of scope to</button>
+                  <button type="button" class="btn btn-outline-primary btn-sm section-workpackage-add" data-field="outOfScope"><i class="bi bi-plus-square"></i> Add exclusions to</button>
                 </div>
               </div>
               <div class="rte-toolbar" data-target="outOfScope"></div>
@@ -655,6 +655,16 @@
       return editor ? (editor.innerHTML || '').trim() : '';
     }
 
+    function getSectionWorkpackageFieldLabel(field){
+      return {
+        stakeholders: 'stakeholders',
+        constraints: 'dependencies',
+        assumptions: 'assumptions',
+        outOfScope: 'exclusions',
+        deliverables: 'deliverables'
+      }[field] || field;
+    }
+
     function createSectionWorkpackageEntry(field, workpackageKey, label, initialHTML){
       var list = document.querySelector('.section-workpackage-list[data-field="' + field + '"]');
       if(!list || !workpackageKey) return null;
@@ -673,17 +683,28 @@
       btn.type = 'button';
       btn.className = 'btn btn-outline-danger btn-sm';
       btn.innerHTML = '<i class="bi bi-x-lg"></i>';
-      btn.addEventListener('click', function(){ card.remove(); refreshWorkpackageOptions(); });
+      btn.addEventListener('click', function(){ card.remove(); refreshWorkpackageOptions(); updateSectionWorkpackageBlockState(field); });
       head.append(title, btn);
-      var rte = createDynamicRte('Add ' + field + ' for ' + label + '...', initialHTML || '');
+      var rte = createDynamicRte('Add ' + getSectionWorkpackageFieldLabel(field) + ' for ' + label + '...', initialHTML || '');
       rte.editor.classList.add('section-workpackage-editor');
       card.append(head, rte.toolbar, rte.editor);
       list.appendChild(card);
       return card;
     }
 
+    function updateSectionWorkpackageBlockState(field){
+      var block = document.querySelector('.section-workpackage-block[data-field="' + field + '"]');
+      if(!block) return;
+      var toolbar = block.querySelector('.rte-toolbar[data-target="' + field + '"]');
+      var editor = block.querySelector('#' + CSS.escape(field));
+      var hasEntries = !!block.querySelector('.section-workpackage-entry');
+      if(toolbar) toolbar.classList.toggle('d-none', hasEntries);
+      if(editor) editor.classList.toggle('d-none', hasEntries);
+    }
+
     function addSectionWorkpackageField(field, workpackageKey, label, initialHTML){
       var entry = createSectionWorkpackageEntry(field, workpackageKey, label, initialHTML);
+      updateSectionWorkpackageBlockState(field);
       if(entry){
         var editor = entry.querySelector('.section-workpackage-editor');
         if(editor) editor.focus();
@@ -733,6 +754,7 @@
           entry.remove();
         }
       });
+      SECTION_WORKPACKAGE_FIELDS.forEach(updateSectionWorkpackageBlockState);
     }
 
     function getWorkpackageMetaGroup(item, field, fallbackIndex){
@@ -1147,9 +1169,9 @@
           grouped: {'General':[],'Functional':[],'Non-functional':[]},
           metaGroups: [
             { field:'stakeholders', title:'Stakeholders', html: sanitize(wp.stakeholders || ''), text: htmlToText(wp.stakeholders || '') },
-            { field:'constraints', title:'Constraints', html: sanitize(wp.constraints || ''), text: htmlToText(wp.constraints || '') },
+            { field:'constraints', title:'Dependencies', html: sanitize(wp.constraints || ''), text: htmlToText(wp.constraints || '') },
             { field:'assumptions', title:'Assumptions', html: sanitize(wp.assumptions || ''), text: htmlToText(wp.assumptions || '') },
-            { field:'outOfScope', title:'Out of Scope', html: sanitize(wp.outOfScope || ''), text: htmlToText(wp.outOfScope || '') },
+            { field:'outOfScope', title:'Out of Scope (Exclusions)', html: sanitize(wp.outOfScope || ''), text: htmlToText(wp.outOfScope || '') },
             { field:'deliverables', title:'Deliverables', html: sanitize(wp.deliverables || ''), text: htmlToText(wp.deliverables || '') }
           ]
         };
@@ -1222,7 +1244,7 @@
           '<section class="mb-4">',
           '<h3 class="text-primary h4">' + sanitize(wp.label) + (totalHours ? ' <span class="small text-body-secondary">(Total estimation: ' + totalHours + ' h)</span>' : '') + '</h3>',
           detailMarkup,
-          requirementMarkup ? '<section class="mb-3"><h4 class="h6 text-primary">Requirements</h4>' + requirementMarkup + '</section>' : '',
+          requirementMarkup ? '<section class="mb-3"><h4 class="h6 text-primary">Requirements (Inclusions)</h4>' + requirementMarkup + '</section>' : '',
           '</section>'
         ].join('');
       }
@@ -1234,9 +1256,9 @@
         renderSection('Stakeholders', stakeholders),
         renderSection('Goals &amp; Objectives', goals),
         renderArchitectureSection(),
-        renderSection('Constraints', constraints),
+        renderSection('Dependencies', constraints),
         renderSection('Assumptions', assumptions),
-        renderSection('Out of Scope', outOfScope),
+        renderSection('Out of Scope (Exclusions)', outOfScope),
         renderTimeCostSection(),
         renderSection('Deliverables', deliverables),
         renderSection('Additional Notes', notes),
@@ -1324,7 +1346,7 @@
       if(req.General.length)       reqText += 'General:\n' + joinList(req.General) + '\n\n';
       if(req.Functional.length)    reqText += 'Functional:\n' + joinList(req.Functional) + '\n\n';
       if(req['Non-functional'].length) reqText += 'Non-functional:\n' + joinList(req['Non-functional']) + '\n\n';
-      fields.push(['Requirements', reqText.trim() || '—']);
+      fields.push(['Requirements (Inclusions)', reqText.trim() || '—']);
 
       function buildSectionDetailText(field){
         return workpackages.map(function(wp, idx){
@@ -1333,9 +1355,9 @@
           return getWorkpackageLabel(wp, idx + 1) + ': ' + detailText;
         }).filter(Boolean).join('\n');
       }
-      fields.push(['Constraints',  [htmlToText(getHTML('constraints')), buildSectionDetailText('constraints')].filter(Boolean).join('\n')]);
+      fields.push(['Dependencies',  [htmlToText(getHTML('constraints')), buildSectionDetailText('constraints')].filter(Boolean).join('\n')]);
       fields.push(['Assumptions',  [htmlToText(getHTML('assumptions')), buildSectionDetailText('assumptions')].filter(Boolean).join('\n')]);
-      fields.push(['Out of Scope', [htmlToText(getHTML('outOfScope')), buildSectionDetailText('outOfScope')].filter(Boolean).join('\n')]);
+      fields.push(['Out of Scope (Exclusions)', [htmlToText(getHTML('outOfScope')), buildSectionDetailText('outOfScope')].filter(Boolean).join('\n')]);
 
       fields.push(['Timeline (weeks)', htmlToText(getHTML('timeline'))]);
       fields.push(['Cost (hours)',     htmlToText(getHTML('cost'))]);
