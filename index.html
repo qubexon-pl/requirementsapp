@@ -105,9 +105,6 @@
   <input type="file" id="loadJsonInput" accept="application/json,.json" hidden>
   <i class="bi bi-upload"></i> Load JSON
 </label>
-        <button class="btn btn-danger btn-sm" id="resetStorageBtn" type="button" title="Clear saved data only (localStorage)">
-          <i class="bi bi-trash"></i> Reset Storage
-        </button>
         <button class="btn btn-outline-secondary btn-sm" id="clearFormBtn" type="button" title="Clear the form (and local copy)">
           <i class="bi bi-eraser"></i> Clear
         </button>
@@ -317,9 +314,6 @@
           </div>
         </div>
 
-        <p class="text-center text-body-secondary mt-3 small">
-          <i class="bi bi-shield-lock"></i> Your data stays in your browser via <code>localStorage</code>.
-        </p>
       </div>
     </div>
   </main>
@@ -1125,14 +1119,6 @@
 
     document.getElementById('saveFormBtn').addEventListener('click', saveForm);
     document.getElementById('clearFormBtn').addEventListener('click', clearForm);
-    document.getElementById('resetStorageBtn').addEventListener('click', function(){
-      if(!confirm('Clear saved local storage data for this form? This will not wipe the current page fields.')) return;
-      if(storageRemove(FORM_STORAGE_KEY)){
-        alert('Local storage reset. Reload page to start fresh.');
-      } else {
-        alert('Could not access local storage in this browser context.');
-      }
-    });
     window.addEventListener('beforeunload', saveForm);
 
     // ===== Generator using <template> =====
