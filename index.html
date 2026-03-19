@@ -1154,10 +1154,10 @@
           label: getWorkpackageLabel(wp, idx+1),
           grouped: {'General':[],'Functional':[],'Non-functional':[]},
           metaGroups: [
-            { field:'stakeholders', title:'Stakeholders', html: sanitize(wp.stakeholders || ''), text: htmlToText(wp.stakeholders || '') },
+            { field:'outOfScope', title:'Out of Scope (Exclusions)', html: sanitize(wp.outOfScope || ''), text: htmlToText(wp.outOfScope || '') },
             { field:'constraints', title:'Dependencies', html: sanitize(wp.constraints || ''), text: htmlToText(wp.constraints || '') },
             { field:'assumptions', title:'Assumptions', html: sanitize(wp.assumptions || ''), text: htmlToText(wp.assumptions || '') },
-            { field:'outOfScope', title:'Out of Scope (Exclusions)', html: sanitize(wp.outOfScope || ''), text: htmlToText(wp.outOfScope || '') },
+            { field:'stakeholders', title:'Stakeholders', html: sanitize(wp.stakeholders || ''), text: htmlToText(wp.stakeholders || '') },
             { field:'deliverables', title:'Deliverables', html: sanitize(wp.deliverables || ''), text: htmlToText(wp.deliverables || '') }
           ]
         };
@@ -1229,8 +1229,8 @@
         return [
           '<section class="mb-4">',
           '<h3 class="text-primary h4">' + sanitize(wp.label) + (totalHours ? ' <span class="small text-body-secondary">(Total estimation: ' + totalHours + ' h)</span>' : '') + '</h3>',
-          detailMarkup,
           requirementMarkup ? '<section class="mb-3"><h4 class="h6 text-primary">Requirements (Inclusions)</h4>' + requirementMarkup + '</section>' : '',
+          detailMarkup,
           '</section>'
         ].join('');
       }
@@ -1239,15 +1239,8 @@
         '<h2 class="text-primary h4">General Project Details</h2>',
         renderSection('Company Description', companyDesc),
         renderSection('Current Landscape Description', currentLandscape),
-        renderSection('Stakeholders', stakeholders),
         renderSection('Goals &amp; Objectives', goals),
         renderArchitectureSection(),
-        renderSection('Dependencies', constraints),
-        renderSection('Assumptions', assumptions),
-        renderSection('Out of Scope (Exclusions)', outOfScope),
-        renderTimeCostSection(),
-        renderSection('Deliverables', deliverables),
-        renderSection('Additional Notes', notes),
         '</section>'
       ].join('');
       var wpBlocks = workpackageGroups.map(renderWorkpackageBlock).join('') + renderWorkpackageBlock(unassigned);
@@ -1257,6 +1250,10 @@
         (wpBlocks || '<p class="text-body-secondary"><em>No workpackage-specific details provided.</em></p>'),
         '</section>'
       ].join('\n');
+      var trailingSectionsHTML = [
+        renderTimeCostSection(),
+        renderSection('Additional Notes', notes)
+      ].join('');
 
       var tmpl = document.getElementById('docTemplate').innerHTML;
 
@@ -1266,7 +1263,7 @@
         .split('[[PROJECT_NAME_ESC]]').join(projectNameEsc)
         .replace('[[DOC_INSTANCE_ID]]', docInstanceId)
         .replace('[[GENERAL_PROJECT_DETAILS_HTML]]', generalProjectDetailsHTML)
-        .replace('[[WORKPACKAGES_SECTION_HTML]]', workpackagesSectionHTML)
+        .replace('[[WORKPACKAGES_SECTION_HTML]]', workpackagesSectionHTML + trailingSectionsHTML)
         .replace('[[LOGO_DATA_URL]]', logoDataUrl || '')
         .replace('[[DIAGRAM_DATA_URL]]', diagramDataUrl || '');
 
