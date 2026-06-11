@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Requirements Generator — Project Scorecard Style</title>
+  <title>Requirements Generator — Project Details</title>
 
   <!-- Bootswatch (Lux) + Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/lux/bootstrap.min.css" rel="stylesheet">
@@ -143,6 +143,8 @@
 
     /* ===== Project sizing inspired theme ===== */
     .navbar {
+      position: relative;
+      z-index: 1080;
       background: transparent !important;
       padding: 1.25rem 0 .25rem;
     }
@@ -291,7 +293,7 @@
       max-width: none;
     }
 
-    .app-container > .row > [class*="col-"] { max-width: 1240px; }
+    .app-container > .row > [class*="col-"] { max-width: none; }
 
     .card,
     .border.rounded-3,
@@ -359,13 +361,40 @@
     }
 
     .rte-toolbar .btn,
-    .btn-outline-primary,
-    .btn-outline-secondary,
-    .btn-outline-danger {
+    .btn,
+    .dropdown-menu {
       border-radius: 999px;
       text-transform: none;
       letter-spacing: 0;
       font-weight: 700;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+      min-height: 2.45rem;
+      padding: .55rem 1rem;
+    }
+
+    .btn-sm {
+      min-height: 2.1rem;
+      padding: .4rem .8rem;
+    }
+
+    .dropdown-menu {
+      z-index: 1100;
+      padding: .55rem;
+      border: 1px solid var(--app-border);
+      background: rgba(255, 255, 255, .96);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, .14);
+    }
+
+    .dropdown-item {
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: none;
     }
 
     .btn-outline-primary,
@@ -434,11 +463,8 @@
   <input type="file" id="loadJsonInput" accept="application/json,.json" hidden>
   <i class="bi bi-upload"></i> Load JSON
 </label>
-        <button class="btn btn-outline-secondary btn-sm" id="clearFormBtn" type="button" title="Clear the form (and local copy)">
+        <button class="btn btn-outline-secondary btn-sm" id="clearFormBtn" type="button" title="Clear the form">
           <i class="bi bi-eraser"></i> Clear
-        </button>
-        <button class="btn btn-outline-secondary btn-sm" id="saveFormBtn" type="button" title="Save this form locally">
-          <i class="bi bi-save"></i> Save
         </button>
 
         <div class="btn-group">
@@ -463,23 +489,22 @@
     <section class="app-hero" aria-labelledby="appHeroTitle">
       <div class="row g-4 align-items-center">
         <div class="col-lg-8">
-          <span class="eyebrow"><i class="bi bi-stars"></i> Scorecard</span>
           <h1 id="appHeroTitle">Requirements planning for delivery-ready projects</h1>
-          <p class="hero-copy">Capture project context, workpackages, inclusions, dependencies, assumptions, and deliverables in a focused one-page workspace inspired by the clean Microsoft Fabric sizing scorecard.</p>
+          <p class="hero-copy">Capture project context, workpackages, inclusions, dependencies, assumptions, and deliverables in a focused one-page workspace with a clean delivery-planning layout.</p>
         </div>
         <div class="col-lg-4">
           <div class="d-flex gap-3 align-items-stretch">
             <div class="hero-mark flex-shrink-0">R</div>
             <div class="hero-card flex-grow-1">
               <strong>Plan</strong>
-              <span>Export JSON or DOCX, preview, and save locally as you refine scope.</span>
+              <span>Export JSON or DOCX, then preview or save as PDF as you refine scope.</span>
             </div>
           </div>
         </div>
       </div>
     </section>
     <div class="row g-4">
-      <div class="col-12 col-xxl-10 mx-auto">
+      <div class="col-12">
         <div class="card shadow-sm">
           <div class="card-header">
             <div class="d-flex align-items-center justify-content-between">
@@ -487,7 +512,6 @@
                 <i class="bi bi-clipboard-check"></i>
                 <span class="fw-semibold">Project Details</span>
               </div>
-              <span class="small-hint"><i class="bi bi-hdd"></i> Form auto-saves locally</span>
             </div>
           </div>
 
@@ -587,7 +611,7 @@
 
             <div class="border rounded-3 p-3 mt-3">
               
-              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements (Inclusions)</h5><div class="btn-group ms-auto" role="group">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements (Inclusions)</h5><div class="d-flex align-items-center gap-2 flex-wrap ms-auto" role="group">
                   <button type="button" class="btn btn-outline-secondary" id="addThree"><i class="bi bi-plus-lg"></i> Add 3 blank requirements</button>
                   <button type="button" class="btn btn-primary" id="addOne"><i class="bi bi-plus-square"></i> Add requirement</button>
                 </div>
@@ -732,7 +756,6 @@
       </div>
       <div class="btn-group">
         <button id="editBtn" type="button" class="btn btn-outline-light"><i class="bi bi-pencil-square"></i> Edit</button>
-        <button id="saveBtn" type="button" class="btn btn-outline-light"><i class="bi bi-save"></i> Save</button>
         <button id="pdfBtn" type="button" class="btn btn-outline-light"><i class="bi bi-filetype-pdf"></i> Save as PDF</button>
       </div>
     </div>
@@ -811,25 +834,10 @@
     var bars = document.querySelectorAll('.rte-toolbar');
     bars.forEach(buildToolbar);
 
-    var brand = document.querySelector('.navbar-brand');
-    var pname = brand ? brand.textContent : (document.title || 'Project');
-    var KEY = 'reqdoc:' + pname.replace(/\s+/g,'_') + ':bootstrap:rte:onecol:v10:[[DOC_INSTANCE_ID]]';
     var root = document.getElementById('editableRoot');
     var editBtn = document.getElementById('editBtn');
-    var saveBtn = document.getElementById('saveBtn');
     var pdfBtn  = document.getElementById('pdfBtn');
     var docRteBar = document.getElementById('docRteBar');
-    function getStoredValue(key){
-      try { return window.localStorage.getItem(key); }
-      catch (e) { return null; }
-    }
-    function setStoredValue(key, value){
-      try { window.localStorage.setItem(key, value); return true; }
-      catch (e) { return false; }
-    }
-
-    var saved = getStoredValue(KEY);
-    if (saved) { root.innerHTML = saved; }
 
     function setEditable(on){
       var ed = root.querySelectorAll('[data-editable="true"], #content');
@@ -843,12 +851,7 @@
       setEditable(!on);
       editBtn.innerHTML = on ? '<i class="bi bi-pencil-square"></i> Edit' : '<i class="bi bi-check2-square"></i> Stop Editing';
     });
-    saveBtn.addEventListener('click', function(){
-      var ok = setStoredValue(KEY, root.innerHTML);
-      alert(ok ? 'Saved!' : 'Save is unavailable in this preview tab. You can still edit and use Save as PDF.');
-    });
     pdfBtn.addEventListener('click', function(){ window.print(); });
-    window.addEventListener('beforeunload', function(){ setStoredValue(KEY, root.innerHTML); });
   })();
       // Export / Import (Full CSV)
     var exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -937,20 +940,6 @@
     }
 
     var TYPES = ['General','Functional','Non-functional'];
-    var FORM_STORAGE_KEY = 'reqgen:bootstrap:rte:onecol:v11'; // new namespace
-
-    function storageGet(key){
-      try { return window.localStorage.getItem(key); }
-      catch (e) { return null; }
-    }
-    function storageSet(key, value){
-      try { window.localStorage.setItem(key, value); return true; }
-      catch (e) { return false; }
-    }
-    function storageRemove(key){
-      try { window.localStorage.removeItem(key); return true; }
-      catch (e) { return false; }
-    }
 
     function readFileAsDataURL(file){
       return new Promise(function(resolve,reject){
@@ -1380,79 +1369,12 @@
       var p=document.getElementById('diagramPreview'); p.src=diagramDataUrl; p.classList.remove('d-none');
     });
 
-    // ===== Form Save / Restore / Clear =====
+    // ===== Form Clear =====
     function getHTML(id){ var el=document.getElementById(id); return el ? el.innerHTML : ''; }
     function setHTML(id, html){ var el=document.getElementById(id); if(el) el.innerHTML = html || ''; }
 
-    function saveForm(){
-      var data={
-        projectName: document.getElementById('projectName').value||'',
-        companyDesc: getHTML('companyDesc'),
-        timeline: getHTML('timeline'),
-        cost: getHTML('cost'),
-        stakeholders: getHTML('stakeholders'),
-        currentLandscape: getHTML('currentLandscape'),
-        goals: getHTML('goals'),
-        constraints: getHTML('constraints'),
-        assumptions: getHTML('assumptions'),
-        outOfScope: getHTML('outOfScope'),
-        timeCostDesc: getHTML('timeCostDesc'),
-        architectureDesc: getHTML('architectureDesc'),
-        deliverables: getHTML('deliverables'),
-        notes: getHTML('notes'),
-        logo: logoDataUrl||'',
-        diagram: diagramDataUrl||'',
-        workpackages: getWorkpackages(),
-        reqs: [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
-          return {
-            type:item.querySelector('select').value,
-            workpackage:(item.querySelector('.req-workpackage')||{}).value||'',
-            estimateHours:(item.querySelector('.req-estimate-hours')||{}).value||'',
-            html:item.querySelector('.rte').innerHTML||''
-          };
-        })
-      };
-      if(storageSet(FORM_STORAGE_KEY, JSON.stringify(data))){
-        showToast('Form saved locally.');
-      }
-    }
-
-    function restoreForm(){
-      var raw=storageGet(FORM_STORAGE_KEY);
-      if(!raw){ addRequirement(); return; }
-      try{
-        var d=JSON.parse(raw);
-        document.getElementById('projectName').value=d.projectName||'';
-        setHTML('companyDesc', d.companyDesc||'');
-        setHTML('timeline', d.timeline||'');
-        setHTML('cost', d.cost||'');
-        setHTML('stakeholders', d.stakeholders||'');
-        setHTML('currentLandscape', d.currentLandscape||'');
-        setHTML('goals', d.goals||'');
-        setHTML('constraints', d.constraints||'');
-        setHTML('assumptions', d.assumptions||'');
-        setHTML('outOfScope', d.outOfScope||'');
-        setHTML('timeCostDesc', d.timeCostDesc||'');
-        setHTML('architectureDesc', d.architectureDesc||'');
-        setHTML('deliverables', d.deliverables||'');
-        setHTML('notes', d.notes||'');
-        document.getElementById('workpackageList').innerHTML='';
-        if(Array.isArray(d.workpackages) && d.workpackages.length){
-          d.workpackages.forEach(function(w){ addWorkpackage(w.id||'', w.name||'', w); });
-        } else {
-          addWorkpackage('Workpackage 1','Assessment');
-        }
-        document.getElementById('reqList').innerHTML='';
-        if(Array.isArray(d.reqs)&&d.reqs.length){ d.reqs.forEach(function(r){ addRequirement(r.type||'General', r.html||'', r.workpackage||'', r.estimateHours||''); }); } else { addRequirement(); }
-        logoDataUrl=d.logo||''; diagramDataUrl=d.diagram||'';
-        if(logoDataUrl){ var lp=document.getElementById('logoPreview'); lp.src=logoDataUrl; lp.classList.remove('d-none'); }
-        if(diagramDataUrl){ var dp=document.getElementById('diagramPreview'); dp.src=diagramDataUrl; dp.classList.remove('d-none'); }
-      }catch(e){ addRequirement(); }
-    }
-
     function clearForm(){
-      if(!confirm('Clear all form fields and remove the saved copy?')) return;
-      storageRemove(FORM_STORAGE_KEY);
+      if(!confirm('Clear all form fields?')) return;
       document.getElementById('projectName').value='';
       ['companyDesc','timeline','cost','stakeholders','currentLandscape','goals','constraints','assumptions','outOfScope','timeCostDesc','architectureDesc','deliverables','notes'].forEach(function(id){ setHTML(id,''); });
       document.getElementById('workpackageList').innerHTML='';
@@ -1464,9 +1386,7 @@
       showToast('Form cleared.');
     }
 
-    document.getElementById('saveFormBtn').addEventListener('click', saveForm);
     document.getElementById('clearFormBtn').addEventListener('click', clearForm);
-    window.addEventListener('beforeunload', saveForm);
 
     // ===== Generator using <template> =====
     function generateHTML(){
@@ -2173,7 +2093,6 @@
     initRTEs();
     addWorkpackage('Workpackage 1','Assessment');
     addRequirement();
-    restoreForm();
       // Export / Import (Full CSV)
     var exportCsvBtn = document.getElementById('exportCsvBtn');
     if (exportCsvBtn){
