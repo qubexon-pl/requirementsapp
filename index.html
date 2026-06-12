@@ -611,7 +611,7 @@
 
             <div class="border rounded-3 p-3 mt-3">
               
-              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements (Inclus[...]
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements (Inclusions)</h5>
                   <button type="button" class="btn btn-outline-secondary" id="addThree"><i class="bi bi-plus-lg"></i> Add 3 blank requirements</button>
                   <button type="button" class="btn btn-primary" id="addOne"><i class="bi bi-plus-square"></i> Add requirement</button>
                 </div>
@@ -934,6 +934,7 @@
     }
 
     var TYPES = ['General','Functional','Non-functional'];
+    var SECTION_WORKPACKAGE_FIELDS = ['constraints','assumptions','outOfScope','deliverables','stakeholders'];
 
     function readFileAsDataURL(file){
       return new Promise(function(resolve,reject){
@@ -941,6 +942,15 @@
         r.onload=function(){resolve(r.result)};
         r.onerror=reject;
         r.readAsDataURL(file);
+      });
+    }
+
+    function readFileAsText(file){
+      return new Promise(function(resolve,reject){
+        var r=new FileReader();
+        r.onload=function(){resolve(r.result)};
+        r.onerror=reject;
+        r.readAsText(file);
       });
     }
 
@@ -958,8 +968,6 @@
       buildToolbar(toolbar);
       return { toolbar: toolbar, editor: editor };
     }
-
-    var SECTION_WORKPACKAGE_FIELDS = ['constraints','assumptions','outOfScope','deliverables','stakeholders'];
 
     function getWorkpackageKeyFromItem(item, fallbackIndex){
       if(!item) return '';
@@ -1071,6 +1079,84 @@
       a.href = URL.createObjectURL(blob);
       a.download = 'requirements.json';
       a.click();
+    }
+
+    function loadJSONFromFile(file){
+      readFileAsText(file).then(function(text){
+        try {
+          var data = JSON.parse(text);
+          
+          // Clear existing data
+          document.getElementById('projectName').value = data.projectName || '';
+          document.getElementById('companyDesc').innerHTML = data.companyDesc || '';
+          document.getElementById('currentLandscape').innerHTML = data.currentLandscape || '';
+          document.getElementById('architectureDesc').innerHTML = data.architectureDesc || '';
+          document.getElementById('timeline').innerHTML = data.timeline || '';
+          document.getElementById('cost').innerHTML = data.cost || '';
+          document.getElementById('timeCostDesc').innerHTML = data.timeCostDesc || '';
+          document.getElementById('stakeholders').innerHTML = data.stakeholders || '';
+          document.getElementById('goals').innerHTML = data.goals || '';
+          document.getElementById('constraints').innerHTML = data.constraints || '';
+          document.getElementById('assumptions').innerHTML = data.assumptions || '';
+          document.getElementById('outOfScope').innerHTML = data.outOfScope || '';
+          document.getElementById('deliverables').innerHTML = data.deliverables || '';
+          document.getElementById('notes').innerHTML = data.notes || '';
+
+          // Clear and restore workpackages
+          document.getElementById('workpackageList').innerHTML = '';
+          if(data.workpackages && data.workpackages.length){
+            data.workpackages.forEach(function(wp){
+              addWorkpackage();
+              var wpItem = document.getElementById('workpackageList').lastChild;
+              if(wpItem){
+                var idField = wpItem.querySelector('.workpackage-id');
+                var nameField = wpItem.querySelector('.workpackage-name');
+                if(idField) idField.value = wp.id || '';
+                if(nameField) nameField.value = wp.name || '';
+
+                // Restore workpackage-specific section data
+                SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
+                  if(wp[field]){
+                    var wpKey = (wp.id || wp.name || '').trim();
+                    var label = getSectionWorkpackageFieldLabel(field);
+                    var entry = createSectionWorkpackageEntry(field, wpKey, 'For ' + wpKey + ':', wp[field]);
+                  }
+                });
+              }
+            });
+          }
+
+          // Clear and restore requirements
+          document.getElementById('reqList').innerHTML = '';
+          if(data.requirements && data.requirements.length){
+            data.requirements.forEach(function(req){
+              addRequirement();
+              var reqItem = document.getElementById('reqList').lastChild;
+              if(reqItem){
+                var idField = reqItem.querySelector('.req-id');
+                var titleField = reqItem.querySelector('.req-title');
+                var descField = reqItem.querySelector('.req-desc');
+                var typeField = reqItem.querySelector('.req-type');
+                var priorityField = reqItem.querySelector('.req-priority');
+                var wpField = reqItem.querySelector('.req-wp');
+
+                if(idField) idField.value = req.id || '';
+                if(titleField) titleField.value = req.title || '';
+                if(descField) descField.innerHTML = req.description || '';
+                if(typeField) typeField.value = req.type || 'General';
+                if(priorityField) priorityField.value = req.priority || 'High';
+                if(wpField) wpField.value = req.workpackage || '';
+              }
+            });
+          }
+
+          alert('JSON loaded successfully!');
+        } catch(e){
+          alert('Error parsing JSON: ' + e.message);
+        }
+      }).catch(function(err){
+        alert('Error reading file: ' + err.message);
+      });
     }
 
     async function generatePreview(){
@@ -1242,8 +1328,15 @@
       createSectionWorkpackageEntry(field, wpKey, 'For ' + wpKey + ':', '');
     }
 
+    // Event listeners
     document.getElementById('generateBtn').addEventListener('click', generatePreview);
     document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+    document.getElementById('loadJsonInput').addEventListener('change', function(e){
+      if(e.target.files && e.target.files[0]){
+        loadJSONFromFile(e.target.files[0]);
+      }
+    });
+
     document.getElementById('addWorkpackageBtn').addEventListener('click', function(){
       addWorkpackage();
       SECTION_WORKPACKAGE_FIELDS.forEach(syncSectionWorkpackageSelects);
