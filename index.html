@@ -490,7 +490,7 @@
       <div class="row g-4 align-items-center">
         <div class="col-lg-8">
           <h1 id="appHeroTitle">Requirements planning for delivery-ready projects</h1>
-          <p class="hero-copy">Capture project context, workpackages, inclusions, dependencies, assumptions, and deliverables in a focused one-page workspace with a clean delivery-planning layout.</p>
+          <p class="hero-copy">Capture project context, workpackages, inclusions, dependencies, assumptions, and deliverables in a focused one-page workspace with a clean delivery-planning layout[...]
         </div>
         <div class="col-lg-4">
           <div class="d-flex gap-3 align-items-stretch">
@@ -611,7 +611,7 @@
 
             <div class="border rounded-3 p-3 mt-3">
               
-              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements (Inclusions)</h5><div class="d-flex align-items-center gap-2 flex-wrap ms-auto" role="group">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 req-sticky-toolbar"><h5 class="m-0 section-title"><i class="bi bi-list-check"></i> Requirements (Inclus[...]
                   <button type="button" class="btn btn-outline-secondary" id="addThree"><i class="bi bi-plus-lg"></i> Add 3 blank requirements</button>
                   <button type="button" class="btn btn-primary" id="addOne"><i class="bi bi-plus-square"></i> Add requirement</button>
                 </div>
@@ -680,8 +680,6 @@
 
           </div>
 
-          
-            </div>
           </div>
         </div>
 
@@ -700,52 +698,68 @@
   <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/lux/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
+    :root {
+      --app-ink: #102032;
+      --app-muted: #627083;
+      --app-panel: rgba(255, 255, 255, .92);
+      --app-border: rgba(36, 54, 82, .12);
+      --app-blue: #2563eb;
+      --app-cyan: #06b6d4;
+    }
+    body { color: var(--app-ink); background: #f5f8ff; }
     #editableRoot[contenteditable="true"]{outline:2px dashed var(--bs-border-color);border-radius:.5rem;padding:.5rem}
-    .doc-toolbar{position:sticky;top:0;z-index:1020;backdrop-filter:blur(6px)}
+    .doc-toolbar{position:sticky;top:0;z-index:1020;backdrop-filter:blur(6px);background:rgba(0,0,0,.95)}
     .doc-rte-toolbar{background: rgba(0,0,0,0.04); border-top:1px solid var(--bs-border-color); border-bottom:1px solid var(--bs-border-color);}
     .rte-toolbar .btn { padding:.25rem .5rem; }
     .logo-img{height:32px;object-fit:contain}
     .diagram-img{max-height:45vh;object-fit:contain}
-    .metric-label{display:flex;align-items:center;gap:.5rem;color:var(--bs-secondary-color)}
-    .metric-box{min-height:48px;border:2px solid var(--bs-border-color);border-radius:.5rem;padding:.75rem}
+    .metric-label{display:flex;align-items:center;gap:.5rem;color:var(--app-muted)}
+    .metric-box{min-height:48px;border:2px solid var(--app-border);border-radius:.5rem;padding:.75rem}
     #content{font-weight:600;}
     #content h1,#content h2,#content h3,#content h4,#content h5,#content h6{font-weight:700;}
     #content h1, #content h2, #content h3, #content h4, #content h5, #content h6{
-      color: var(--bs-primary);
-      background: color-mix(in srgb, var(--bs-primary) 12%, transparent);
-      border-left: .4rem solid color-mix(in srgb, var(--bs-primary) 80%, black);
+      color: var(--app-blue);
+      background: rgba(37, 99, 235, 0.12);
+      border-left: .4rem solid rgba(37, 99, 235, 0.8);
       padding: .45rem .7rem;
       border-radius: .5rem;
       margin-top: 1.25rem;
     }
+    /* Workpackage section consistent styling - ALL sections get same treatment */
+    .workpackage-section {
+      border: 1px solid var(--app-border);
+      border-radius: 1.35rem;
+      background: var(--app-panel);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .workpackage-section h2 {
+      margin-top: 0 !important;
+      color: var(--app-blue);
+      background: rgba(37, 99, 235, 0.12);
+      border-left: .4rem solid rgba(37, 99, 235, 0.8);
+      padding: .45rem .7rem;
+      border-radius: .5rem;
+    }
+    .workpackage-entries {
+      margin-top: 1rem;
+    }
+    .workpackage-entry {
+      padding: 1rem;
+      border: 1px solid var(--app-border);
+      border-radius: 0.75rem;
+      margin-bottom: 0.75rem;
+      background: rgba(255, 255, 255, .5);
+    }
+    .workpackage-entry h4, .workpackage-entry h5 {
+      margin-top: 0;
+      color: var(--app-blue);
+    }
+    .workpackage-entry p {
+      margin-bottom: 0;
+    }
     @media print{ .doc-toolbar,.doc-rte-toolbar{display:none !important} body{margin:0} }
   </style>
-<style>
-    /* ===== Sticky Requirements Toolbar ===== */
-    .req-sticky-toolbar{
-      position: sticky;
-      top: 64px; /* below navbar */
-      z-index: 1020; /* above cards, below navbar */
-      background: var(--bs-body-bg, #fff);
-      padding: .5rem 0;
-      border-bottom: 1px solid var(--bs-border-color, rgba(0,0,0,.1));
-    }
-    .req-sticky-toolbar .btn{
-      white-space: nowrap;
-    }
-</style>
-<style>
-    /* ===== Floating Add Requirement FAB ===== */
-    .fab-add-req{
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 1040;
-      border-radius: 9999px;
-      padding: .9rem 1.1rem;
-      box-shadow: 0 8px 18px rgba(0,0,0,.15);
-    }
-</style>
 </head>
 <body>
   <nav class="navbar bg-dark navbar-dark doc-toolbar">
@@ -770,7 +784,7 @@
   <main class="container py-4">
     <div id="editableRoot" contenteditable="false">
       <div id="content">
-        <header class="mb-4"><h1 class="h3 text-primary">[[PROJECT_NAME_ESC]]</h1></header>
+        <header class="mb-4"><h1 class="h3">[[PROJECT_NAME_ESC]]</h1></header>
 
         [[GENERAL_PROJECT_DETAILS_HTML]]
 
@@ -781,7 +795,6 @@
 
   <script>
   (function(){
-    // Simple RTE toolbar for the document
     function buildToolbar(container){
       var targetId = container.getAttribute('data-target');
       var html = ''
@@ -840,7 +853,7 @@
     var docRteBar = document.getElementById('docRteBar');
 
     function setEditable(on){
-      var ed = root.querySelectorAll('[data-editable="true"], #content');
+      var ed = root.querySelectorAll('[data-editable="true"], #content, .workpackage-section, .workpackage-entry, .workpackage-entries, .workpackage-entry p, .workpackage-entry h4, .workpackage-entry h5');
       for (var i=0;i<ed.length;i++){ ed[i].setAttribute('contenteditable', on ? 'true' : 'false'); }
       root.setAttribute('contenteditable', on ? 'true' : 'false');
       docRteBar.classList.toggle('d-none', !on);
@@ -853,28 +866,13 @@
     });
     pdfBtn.addEventListener('click', function(){ window.print(); });
   })();
-      // Export / Import (Full CSV)
-    var exportCsvBtn = document.getElementById('exportCsvBtn');
-    if (exportCsvBtn){
-      exportCsvBtn.addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
-    }
-    var loadCsvInput = document.getElementById('loadCsvInput');
-    if (loadCsvInput){
-      loadCsvInput.addEventListener('change', function(e){ if(e.target.files && e.target.files[0]) loadCsvFullFromFile(e.target.files[0]); });
-    }
-    // FAB add requirement
-    var fab = document.getElementById('fabAddRequirement');
-    if (fab){
-      fab.addEventListener('click', function(){ if (typeof addRequirement === 'function') addRequirement(); });
-    }
-
-</script></body>
+  </script>
+</body>
 </html>
   </template>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    /* ===== RTE Tooling (generator page) ===== */
     function buildToolbar(container){
       var targetId = container.getAttribute('data-target');
       var html = ''
@@ -928,13 +926,9 @@
       document.querySelectorAll('.rte-toolbar').forEach(buildToolbar);
     }
 
-    // ===== Utilities =====
     function htmlToText(html){
       if(!html) return '';
-      html = html.replace(/<\s*br\s*\/?>/gi, '\n')
-                 .replace(/<\/p>/gi, '\n')
-                 .replace(/<\/li>/gi, '\n- ')
-                 .replace(/<\/?ul>|<\/?ol>|<\/?strong>|<\/?em>|<\/?b>|<\/?i>|<\/?u>|<\/?span>|<\/?div>|<\/?p>|<\/?h\d>|<\/?section>|<\/?figure>|<\/?img[^>]*>/gi, '');
+      html = html.replace(/<\s*br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<\/li>/gi, '\n- ').replace(/<\/?ul>|<\/?ol>|<\/?strong>|<\/?em>|<\/?b>|<\/?i>|<\/?u>|<\/?span>|<\/?div>|<\/?p>|<\/?h\d>|<\/?section>|<\/?figure>|<\/?img[^>]*>/gi, '');
       html = html.replace(/<[^>]+>/g, '');
       return html.replace(/\n{3,}/g, '\n\n').trim();
     }
@@ -998,1234 +992,305 @@
     function createSectionWorkpackageEntry(field, workpackageKey, label, initialHTML){
       var list = document.querySelector('.section-workpackage-list[data-field="' + field + '"]');
       if(!list || !workpackageKey) return null;
-      var existing = findSectionWorkpackageEntry(field, workpackageKey);
-      if(existing) return existing;
-      var card = document.createElement('div');
-      card.className = 'section-workpackage-entry border rounded-3 p-3 mb-2';
-      card.setAttribute('data-field', field);
-      card.setAttribute('data-workpackage-key', workpackageKey);
-      var head = document.createElement('div');
-      head.className = 'd-flex align-items-center justify-content-between gap-2 mb-2';
-      var title = document.createElement('div');
-      title.className = 'fw-semibold section-workpackage-title';
-      title.textContent = label;
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn-outline-danger btn-sm';
-      btn.innerHTML = '<i class="bi bi-x-lg"></i>';
-      btn.addEventListener('click', function(){ card.remove(); refreshWorkpackageOptions(); updateSectionWorkpackageBlockState(field); });
-      head.append(title, btn);
-      var rte = createDynamicRte('Add ' + getSectionWorkpackageFieldLabel(field) + ' for ' + label + '...', initialHTML || '');
-      rte.editor.classList.add('section-workpackage-editor');
-      card.append(head, rte.toolbar, rte.editor);
-      list.appendChild(card);
-      return card;
+      var entry = document.createElement('div');
+      entry.className = 'section-workpackage-entry card';
+      entry.setAttribute('data-field', field);
+      entry.setAttribute('data-workpackage-key', workpackageKey);
+      entry.innerHTML = '<div class="card-body">'
+        + '<p class="small-hint mb-2">' + label + '</p>'
+        + '<div class="rte-toolbar" data-target="wp_' + Math.random().toString(36).slice(2) + '"></div>'
+        + '<div class="section-workpackage-editor rte" contenteditable="true" data-placeholder="Enter ' + field + ' for ' + workpackageKey + '">' + (initialHTML || '') + '</div>'
+        + '</div>';
+      var editorId = entry.querySelector('.section-workpackage-editor').getAttribute('id') || entry.querySelector('.section-workpackage-editor').id;
+      if (!editorId) {
+        editorId = 'wp_' + Math.random().toString(36).slice(2);
+        entry.querySelector('.section-workpackage-editor').id = editorId;
+      }
+      entry.querySelector('.rte-toolbar').setAttribute('data-target', editorId);
+      buildToolbar(entry.querySelector('.rte-toolbar'));
+      list.appendChild(entry);
+      return entry;
     }
 
-    function updateSectionWorkpackageBlockState(field){
+    function exportToJSON(){
+      var projectName = document.getElementById('projectName').value;
+      var logo = document.getElementById('logoInput').files[0];
+      var data = {
+        projectName: projectName,
+        companyDesc: document.getElementById('companyDesc').innerHTML,
+        currentLandscape: document.getElementById('currentLandscape').innerHTML,
+        architectureDesc: document.getElementById('architectureDesc').innerHTML,
+        timeline: document.getElementById('timeline').innerHTML,
+        cost: document.getElementById('cost').innerHTML,
+        timeCostDesc: document.getElementById('timeCostDesc').innerHTML,
+        stakeholders: document.getElementById('stakeholders').innerHTML,
+        goals: document.getElementById('goals').innerHTML,
+        constraints: document.getElementById('constraints').innerHTML,
+        assumptions: document.getElementById('assumptions').innerHTML,
+        outOfScope: document.getElementById('outOfScope').innerHTML,
+        deliverables: document.getElementById('deliverables').innerHTML,
+        notes: document.getElementById('notes').innerHTML,
+        workpackages: [],
+        requirements: []
+      };
+
+      var wps = document.querySelectorAll('#workpackageList > .card');
+      wps.forEach(function(wp, idx){
+        var id = (wp.querySelector('.workpackage-id') || {}).value || '';
+        var name = (wp.querySelector('.workpackage-name') || {}).value || '';
+        var data_wp = { id: id, name: name };
+
+        SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
+          var wpKey = getWorkpackageKeyFromItem(wp, idx + 1);
+          var value = getWorkpackageFieldValue(wp, field, idx + 1);
+          data_wp[field] = value;
+        });
+
+        data.workpackages.push(data_wp);
+      });
+
+      var reqs = document.querySelectorAll('#reqList > .req-item');
+      reqs.forEach(function(req){
+        var id = (req.querySelector('.req-id') || {}).value || '';
+        var title = (req.querySelector('.req-title') || {}).value || '';
+        var desc = (req.querySelector('.req-desc') || {}).innerHTML || '';
+        var type = (req.querySelector('.req-type') || {}).value || '';
+        var priority = (req.querySelector('.req-priority') || {}).value || '';
+        var wp = (req.querySelector('.req-wp') || {}).value || '';
+        data.requirements.push({ id: id, title: title, description: desc, type: type, priority: priority, workpackage: wp });
+      });
+
+      return data;
+    }
+
+    function exportJSON(){
+      var data = exportToJSON();
+      var json = JSON.stringify(data, null, 2);
+      var blob = new Blob([json], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'requirements.json';
+      a.click();
+    }
+
+    async function generatePreview(){
+      var data = exportToJSON();
+      var template = document.getElementById('docTemplate').innerHTML;
+
+      var projectName = (data.projectName || 'Project').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      var logoFile = document.getElementById('logoInput').files[0];
+      var logoDataUrl = logoFile ? await readFileAsDataURL(logoFile) : '';
+
+      var generalHTML = '<section class="workpackage-section">'
+        + '<h2>Project Overview</h2>';
+
+      if(data.companyDesc) generalHTML += '<div data-editable="true"><h4>Company Description</h4><div>' + data.companyDesc + '</div></div>';
+      if(data.currentLandscape) generalHTML += '<div data-editable="true"><h4>Current Landscape</h4><div>' + data.currentLandscape + '</div></div>';
+      if(data.architectureDesc) generalHTML += '<div data-editable="true"><h4>Architecture Description</h4><div>' + data.architectureDesc + '</div></div>';
+
+      generalHTML += '<div data-editable="true"><h4>Timeline &amp; Cost</h4>'
+        + '<div class="row g-3 mt-2"><div class="col-md-6"><strong>Timeline:</strong> ' + (data.timeline || '—') + '</div>'
+        + '<div class="col-md-6"><strong>Cost:</strong> ' + (data.cost || '—') + '</div></div>'
+        + (data.timeCostDesc ? '<div class="mt-2">' + data.timeCostDesc + '</div>' : '')
+        + '</div>';
+
+      if(data.stakeholders) generalHTML += '<div data-editable="true"><h4>Stakeholders</h4><div>' + data.stakeholders + '</div></div>';
+      if(data.goals) generalHTML += '<div data-editable="true"><h4>Goals &amp; Objectives</h4><div>' + data.goals + '</div></div>';
+      if(data.constraints) generalHTML += '<div data-editable="true"><h4>Dependencies</h4><div>' + data.constraints + '</div></div>';
+      if(data.assumptions) generalHTML += '<div data-editable="true"><h4>Assumptions</h4><div>' + data.assumptions + '</div></div>';
+      if(data.outOfScope) generalHTML += '<div data-editable="true"><h4>Out of Scope (Exclusions)</h4><div>' + data.outOfScope + '</div></div>';
+      if(data.deliverables) generalHTML += '<div data-editable="true"><h4>Deliverables</h4><div>' + data.deliverables + '</div></div>';
+      if(data.notes) generalHTML += '<div data-editable="true"><h4>Additional Notes</h4><div>' + data.notes + '</div></div>';
+
+      generalHTML += '</section>';
+
+      var workpackagesHTML = '';
+      if(data.workpackages && data.workpackages.length){
+        data.workpackages.forEach(function(wp, idx){
+          var wpKey = wp.id || wp.name || ('Workpackage ' + (idx + 1));
+          workpackagesHTML += '<section class="workpackage-section">'
+            + '<h2>' + (wp.id ? wp.id + ': ' : '') + (wp.name || '') + '</h2>';
+
+          SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
+            if(wp[field]){
+              var label = getSectionWorkpackageFieldLabel(field);
+              workpackagesHTML += '<div data-editable="true"><h4>' + label.charAt(0).toUpperCase() + label.slice(1) + '</h4><div>' + wp[field] + '</div></div>';
+            }
+          });
+
+          var wpReqs = data.requirements.filter(function(r){ return r.workpackage === wpKey; });
+          if(wpReqs.length){
+            workpackagesHTML += '<div data-editable="true"><h4>Requirements</h4><div class="workpackage-entries">';
+            wpReqs.forEach(function(req){
+              workpackagesHTML += '<div class="workpackage-entry">'
+                + (req.id ? '<h5 style="margin-top:0">REQ-' + req.id + '</h5>' : '')
+                + (req.title ? '<strong>' + req.title + '</strong><br>' : '')
+                + (req.type ? '<small style="color:#666">Type: ' + req.type + ' | Priority: ' + req.priority + '</small><br>' : '')
+                + '<p>' + req.description + '</p>'
+                + '</div>';
+            });
+            workpackagesHTML += '</div></div>';
+          }
+
+          workpackagesHTML += '</section>';
+        });
+      }
+
+      var html = template
+        .replace('[[PROJECT_NAME_ESC]]', projectName)
+        .replace(/\[\[LOGO_DATA_URL\]\]/g, logoDataUrl)
+        .replace('[[GENERAL_PROJECT_DETAILS_HTML]]', generalHTML)
+        .replace('[[WORKPACKAGES_SECTION_HTML]]', workpackagesHTML);
+
+      var win = window.open('', 'preview');
+      win.document.write(html);
+      win.document.close();
+    }
+
+    function addWorkpackage(){
+      var list = document.getElementById('workpackageList');
+      var idx = list.querySelectorAll('.card').length + 1;
+      var item = document.createElement('div');
+      item.className = 'card mb-3';
+      item.innerHTML = '<div class="card-header"><h6 class="m-0">Workpackage #' + idx + '</h6></div>'
+        + '<div class="card-body">'
+        + '<div class="row g-3">'
+        + '<div class="col-md-4"><label class="form-label">ID</label><input type="text" class="form-control workpackage-id" placeholder="e.g., WP01"></div>'
+        + '<div class="col-md-8"><label class="form-label">Name</label><input type="text" class="form-control workpackage-name" placeholder="e.g., Assessment"></div>'
+        + '</div>'
+        + '<div class="mt-3">'
+        + '<button type="button" class="btn btn-sm btn-outline-secondary deleteWorkpackageBtn"><i class="bi bi-trash"></i> Delete</button>'
+        + '</div>'
+        + '</div>';
+      item.querySelector('.deleteWorkpackageBtn').addEventListener('click', function(){
+        item.remove();
+      });
+      list.appendChild(item);
+    }
+
+    function addRequirement(){
+      var list = document.getElementById('reqList');
+      var idx = list.querySelectorAll('.req-item').length + 1;
+      var wps = Array.from(document.querySelectorAll('#workpackageList > .card')).map(function(el, i){
+        var id = (el.querySelector('.workpackage-id') || {}).value || '';
+        var name = (el.querySelector('.workpackage-name') || {}).value || '';
+        return id || name || ('Workpackage ' + (i + 1));
+      });
+
+      var item = document.createElement('div');
+      item.className = 'req-item card mb-3';
+      var wpOptions = wps.map(function(wp){ return '<option value="' + wp + '">' + wp + '</option>'; }).join('');
+      item.innerHTML = '<div class="card-body">'
+        + '<div class="row g-3">'
+        + '<div class="col-md-2"><label class="form-label">ID</label><input type="text" class="form-control req-id" placeholder="REQ01"></div>'
+        + '<div class="col-md-6"><label class="form-label">Title</label><input type="text" class="form-control req-title" placeholder="Requirement title"></div>'
+        + '<div class="col-md-2"><label class="form-label">Type</label><select class="form-select req-type">'
+        + '<option>General</option><option>Functional</option><option>Non-functional</option>'
+        + '</select></div>'
+        + '<div class="col-md-2"><label class="form-label">Priority</label><select class="form-select req-priority">'
+        + '<option>High</option><option>Medium</option><option>Low</option>'
+        + '</select></div>'
+        + '</div>'
+        + '<div class="row g-3 mt-2">'
+        + '<div class="col-md-6"><label class="form-label">Workpackage</label><select class="form-select req-wp">' + wpOptions + '</select></div>'
+        + '</div>'
+        + '<div class="mt-3"><label class="form-label">Description</label>'
+        + '<div class="rte-toolbar" data-target="req_desc_' + idx + '"></div>'
+        + '<div id="req_desc_' + idx + '" class="rte req-desc" contenteditable="true" data-placeholder="Describe the requirement..."></div>'
+        + '</div>'
+        + '<div class="mt-3">'
+        + '<button type="button" class="btn btn-sm btn-outline-danger deleteReqBtn"><i class="bi bi-trash"></i> Delete</button>'
+        + '</div>'
+        + '</div>';
+      item.querySelector('.deleteReqBtn').addEventListener('click', function(){
+        item.remove();
+      });
+      buildToolbar(item.querySelector('.rte-toolbar'));
+      list.appendChild(item);
+    }
+
+    function syncSectionWorkpackageSelects(field){
       var block = document.querySelector('.section-workpackage-block[data-field="' + field + '"]');
       if(!block) return;
-      var toolbar = block.querySelector('.rte-toolbar[data-target="' + field + '"]');
-      var editor = block.querySelector('#' + CSS.escape(field));
-      var hasEntries = !!block.querySelector('.section-workpackage-entry');
-      if(toolbar) toolbar.classList.toggle('d-none', hasEntries);
-      if(editor) editor.classList.toggle('d-none', hasEntries);
+      var select = block.querySelector('.section-workpackage-select');
+      if(!select) return;
+      select.innerHTML = '';
+      var wps = Array.from(document.querySelectorAll('#workpackageList > .card')).map(function(el, i){
+        var id = (el.querySelector('.workpackage-id') || {}).value || '';
+        var name = (el.querySelector('.workpackage-name') || {}).value || '';
+        return id || name || ('Workpackage ' + (i + 1));
+      });
+      wps.forEach(function(wp){
+        var opt = document.createElement('option');
+        opt.value = wp;
+        opt.textContent = wp;
+        select.appendChild(opt);
+      });
     }
 
-    function addSectionWorkpackageField(field, workpackageKey, label, initialHTML){
-      var entry = createSectionWorkpackageEntry(field, workpackageKey, label, initialHTML);
-      updateSectionWorkpackageBlockState(field);
-      if(entry){
-        var editor = entry.querySelector('.section-workpackage-editor');
-        if(editor) editor.focus();
+    function addToSectionWorkpackage(field){
+      var select = document.querySelector('.section-workpackage-select[data-field="' + field + '"]');
+      if(!select) return;
+      var wpKey = select.value;
+      if(!wpKey) return;
+      var existing = findSectionWorkpackageEntry(field, wpKey);
+      if(existing){
+        existing.querySelector('.section-workpackage-editor').focus();
+        return;
       }
+      var label = getSectionWorkpackageFieldLabel(field);
+      createSectionWorkpackageEntry(field, wpKey, 'For ' + wpKey + ':', '');
     }
 
-    function renameSectionWorkpackageEntries(oldKey, newKey, newLabel){
-      if(!oldKey || oldKey === newKey) return;
-      SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
-        var entry = findSectionWorkpackageEntry(field, oldKey);
-        if(entry){
-          entry.setAttribute('data-workpackage-key', newKey);
-          var title = entry.querySelector('.section-workpackage-title');
-          if(title) title.textContent = newLabel;
-        }
-      });
-    }
+    document.getElementById('generateBtn').addEventListener('click', generatePreview);
+    document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+    document.getElementById('addWorkpackageBtn').addEventListener('click', function(){
+      addWorkpackage();
+      SECTION_WORKPACKAGE_FIELDS.forEach(syncSectionWorkpackageSelects);
+    });
 
-    function refreshSectionWorkpackageUI(){
-      var workpackages = getWorkpackages();
-      var labelByKey = {};
-      workpackages.forEach(function(wp, idx){
-        labelByKey[(wp.id || wp.name || ('Workpackage ' + (idx + 1))).trim()] = getWorkpackageLabel(wp, idx + 1);
-      });
-      document.querySelectorAll('.section-workpackage-select').forEach(function(sel){
-        var prev = sel.value;
-        sel.innerHTML = '';
-        var placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = workpackages.length ? 'Select workpackage…' : 'No workpackages defined';
-        sel.appendChild(placeholder);
-        workpackages.forEach(function(wp, idx){
-          var opt = document.createElement('option');
-          opt.value = (wp.id || wp.name || ('Workpackage ' + (idx + 1))).trim();
-          opt.textContent = getWorkpackageLabel(wp, idx + 1);
-          sel.appendChild(opt);
-        });
-        sel.disabled = !workpackages.length;
-        if([].slice.call(sel.options).some(function(opt){ return opt.value === prev; })) sel.value = prev;
-      });
-      document.querySelectorAll('.section-workpackage-entry').forEach(function(entry){
-        var key = entry.getAttribute('data-workpackage-key') || '';
-        var title = entry.querySelector('.section-workpackage-title');
-        if(labelByKey[key]){
-          if(title) title.textContent = labelByKey[key];
-        } else {
-          entry.remove();
-        }
-      });
-      SECTION_WORKPACKAGE_FIELDS.forEach(updateSectionWorkpackageBlockState);
-    }
-
-    function getWorkpackageMetaGroup(item, field, fallbackIndex){
-      var html = getWorkpackageFieldValue(item, field, fallbackIndex);
-      return { field: field, html: html, text: htmlToText(html) };
-    }
-
-    function getWorkpackageMetaGroups(item, fallbackIndex){
-      return SECTION_WORKPACKAGE_FIELDS.map(function(field){
-        return getWorkpackageMetaGroup(item, field, fallbackIndex);
-      });
-    }
-
-    // ===== Workpackages UI =====
-    function createWorkpackageItem(initialId, initialName, initialMeta){
-      initialMeta = initialMeta || {};
-      var wrap=document.createElement('div');
-      wrap.className='workpackage-item bg-body-tertiary rounded-3 p-3 mb-2';
-      var row=document.createElement('div'); row.className='row g-2 align-items-start';
-
-      var colId=document.createElement('div'); colId.className='col-12 col-md-4';
-      var idInput=document.createElement('input');
-      idInput.type='text';
-      idInput.className='form-control workpackage-id';
-      idInput.placeholder='Workpackage ID (e.g. Workpackage 1)';
-      idInput.value=initialId||'';
-      colId.appendChild(idInput);
-
-      var colName=document.createElement('div'); colName.className='col-12 col-md-7';
-      var nameInput=document.createElement('input');
-      nameInput.type='text';
-      nameInput.className='form-control workpackage-name';
-      nameInput.placeholder='Workpackage name (e.g. Assessment)';
-      nameInput.value=initialName||'';
-      colName.appendChild(nameInput);
-
-      var colRem=document.createElement('div'); colRem.className='col-12 col-md-1 d-grid';
-      var btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-outline-danger'; btn.innerHTML='<i class="bi bi-x-lg"></i>';
-      btn.addEventListener('click',function(){
-        SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
-          var existing = findSectionWorkpackageEntry(field, getWorkpackageKeyFromItem(wrap, 1));
-          if(existing) existing.remove();
-        });
-        wrap.remove(); refreshWorkpackageOptions(); updateWorkpackageTotals();
-      });
-      colRem.appendChild(btn);
-
-      var colSummary=document.createElement('div'); colSummary.className='col-12';
-      var summary=document.createElement('div'); summary.className='small-hint workpackage-summary';
-      summary.textContent='Total estimation: 0 h (0 requirements)';
-      colSummary.appendChild(summary);
-      function syncWorkpackageKey(){
-        var previousKey = wrap.dataset.workpackageKey || getWorkpackageKeyFromItem(wrap, 1);
-        var currentIndex = [].slice.call(document.querySelectorAll('.workpackage-item')).indexOf(wrap) + 1;
-        var nextKey = getWorkpackageKeyFromItem(wrap, currentIndex);
-        var nextLabel = getWorkpackageLabel({ id: idInput.value || '', name: nameInput.value || '' }, currentIndex);
-        renameSectionWorkpackageEntries(previousKey, nextKey, nextLabel);
-        wrap.dataset.workpackageKey = nextKey;
-        refreshWorkpackageOptions();
+    document.getElementById('clearFormBtn').addEventListener('click', function(){
+      if(confirm('Clear all data?')){
+        document.getElementById('projectName').value = '';
+        document.querySelectorAll('.rte').forEach(function(el){ el.innerHTML = ''; });
+        document.getElementById('workpackageList').innerHTML = '';
+        document.getElementById('reqList').innerHTML = '';
       }
-      idInput.addEventListener('input', function(){ syncWorkpackageKey(); updateWorkpackageTotals(); });
-      nameInput.addEventListener('input', function(){ syncWorkpackageKey(); updateWorkpackageTotals(); });
-      row.append(colId,colName,colRem,colSummary);
-      wrap.append(row);
-      return wrap;
-    }
+    });
 
-    function addWorkpackage(id,name,meta){
-      meta = meta || {};
-      var item = createWorkpackageItem(id,name,meta);
-      document.getElementById('workpackageList').appendChild(item);
-      item.dataset.workpackageKey = getWorkpackageKeyFromItem(item, document.querySelectorAll('.workpackage-item').length);
-      var workpackageKey = getWorkpackageKeyFromItem(item, document.querySelectorAll('.workpackage-item').length);
-      var label = getWorkpackageLabel({ id:id || '', name:name || '' }, document.querySelectorAll('.workpackage-item').length);
-      SECTION_WORKPACKAGE_FIELDS.forEach(function(field){
-        if(meta[field]) addSectionWorkpackageField(field, workpackageKey, label, meta[field]);
-      });
-      refreshWorkpackageOptions();
-    }
+    document.getElementById('addOne').addEventListener('click', addRequirement);
+    document.getElementById('addThree').addEventListener('click', function(){
+      for(var i=0; i<3; i++) addRequirement();
+    });
 
-    function getWorkpackages(){
-      return [].slice.call(document.querySelectorAll('.workpackage-item')).map(function(item, idx){
-        return {
-          id: (item.querySelector('.workpackage-id').value || '').trim(),
-          name: (item.querySelector('.workpackage-name').value || '').trim(),
-          constraints: getWorkpackageFieldValue(item, 'constraints', idx + 1),
-          assumptions: getWorkpackageFieldValue(item, 'assumptions', idx + 1),
-          outOfScope: getWorkpackageFieldValue(item, 'outOfScope', idx + 1),
-          deliverables: getWorkpackageFieldValue(item, 'deliverables', idx + 1),
-          stakeholders: getWorkpackageFieldValue(item, 'stakeholders', idx + 1)
-        };
-      }).filter(function(wp){
-        return wp.id || wp.name || wp.constraints || wp.assumptions || wp.outOfScope || wp.deliverables || wp.stakeholders;
-      });
-    }
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('.section-workpackage-add');
+      if(!btn) return;
+      var field = btn.getAttribute('data-field');
+      addToSectionWorkpackage(field);
+    });
 
-    function getWorkpackageLabel(wp, fallbackIndex){
-      if(!wp) return 'Unassigned';
-      var id = (wp.id || '').trim();
-      var name = (wp.name || '').trim();
-      if(id && name) return id + ' — ' + name;
-      if(id) return id;
-      if(name) return name;
-      return 'Workpackage ' + fallbackIndex;
-    }
-
-    function parseEstimateHours(value){
-      if(value === null || value === undefined || value === '') return 0;
-      var parsed = Number(value);
-      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-    }
-
-    function getRequirementEntries(){
-      return [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
-        return {
-          workpackage: (item.querySelector('.req-workpackage') || {}).value || '',
-          estimateHours: parseEstimateHours((item.querySelector('.req-estimate-hours') || {}).value || '')
-        };
-      });
-    }
-
-    function updateWorkpackageTotals(){
-      var totals = {};
-      getRequirementEntries().forEach(function(entry){
-        if(!entry.workpackage) return;
-        if(!totals[entry.workpackage]) totals[entry.workpackage] = { hours: 0, requirements: 0 };
-        totals[entry.workpackage].hours += entry.estimateHours;
-        totals[entry.workpackage].requirements += 1;
-      });
-
-      [].slice.call(document.querySelectorAll('.workpackage-item')).forEach(function(item, idx){
-        var id = (item.querySelector('.workpackage-id').value || '').trim();
-        var name = (item.querySelector('.workpackage-name').value || '').trim();
-        var key = (id || name || ('Workpackage ' + (idx + 1))).trim();
-        var summary = item.querySelector('.workpackage-summary');
-        if(!summary) return;
-        var stats = totals[key] || { hours: 0, requirements: 0 };
-        summary.textContent = 'Total estimation: ' + stats.hours + ' h (' + stats.requirements + ' requirements)';
-      });
-    }
-
-    function refreshWorkpackageOptions(){
-      var workpackages = getWorkpackages();
-      var options = workpackages.map(function(wp, idx){
-        return {
-          value: (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim(),
-          text: getWorkpackageLabel(wp, idx+1)
-        };
-      });
-      var requirementItems=[].slice.call(document.querySelectorAll('.req-item'));
-      requirementItems.forEach(function(item){
-        var wpSelect=item.querySelector('.req-workpackage');
-        if(!wpSelect) return;
-        var prev=wpSelect.value;
-        wpSelect.innerHTML='';
-        var unassigned=document.createElement('option');
-        unassigned.value='';
-        unassigned.textContent='Unassigned';
-        wpSelect.appendChild(unassigned);
-        options.forEach(function(opt){
-          var o=document.createElement('option');
-          o.value=opt.value;
-          o.textContent=opt.text;
-          wpSelect.appendChild(o);
-        });
-        if([].slice.call(wpSelect.options).some(function(o){ return o.value===prev; })) wpSelect.value=prev;
-      });
-      refreshSectionWorkpackageUI();
-      updateWorkpackageTotals();
-    }
-
-    function setReqWorkpackageValue(wpSelect, initialWorkpackage){
-      if(!wpSelect) return;
-      var raw = (initialWorkpackage || '').trim();
-      if(!raw){ wpSelect.value=''; return; }
-      var options = [].slice.call(wpSelect.options || []);
-      var direct = options.find(function(o){ return (o.value || '').trim() === raw; });
-      if(direct){ wpSelect.value = direct.value; return; }
-      var byText = options.find(function(o){ return (o.textContent || '').trim() === raw; });
-      if(byText){ wpSelect.value = byText.value; return; }
-      var idFromLabel = raw.split('—')[0].trim();
-      var byId = options.find(function(o){ return (o.value || '').trim() === idFromLabel; });
-      wpSelect.value = byId ? byId.value : '';
-    }
-
-    // ===== Requirements UI =====
-    function createReqItem(initialType, initialHTML, initialWorkpackage, initialEstimateHours){
-      initialType = initialType || 'General';
-      initialHTML = initialHTML || '';
-      initialWorkpackage = initialWorkpackage || '';
-      initialEstimateHours = initialEstimateHours || '';
-      var wrap=document.createElement('div');
-      wrap.className='req-item bg-body-tertiary rounded-3 p-3 mb-2';
-      var row=document.createElement('div'); row.className='row g-2 align-items-start';
-
-      var colType=document.createElement('div'); colType.className='col-12 col-lg-2';
-      var sel=document.createElement('select'); sel.className='form-select';
-      TYPES.forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; if(t===initialType)o.selected=true; sel.appendChild(o); });
-      colType.appendChild(sel);
-
-      var colWp=document.createElement('div'); colWp.className='col-12 col-lg-2';
-      var wpSel=document.createElement('select'); wpSel.className='form-select req-workpackage';
-      colWp.appendChild(wpSel);
-
-      var colEstimate=document.createElement('div'); colEstimate.className='col-12 col-lg-2';
-      var estimateInput=document.createElement('input');
-      estimateInput.type='number';
-      estimateInput.min='0';
-      estimateInput.step='0.5';
-      estimateInput.placeholder='Hours';
-      estimateInput.className='form-control req-estimate-hours';
-      estimateInput.value=initialEstimateHours;
-      colEstimate.appendChild(estimateInput);
-
-      var colText=document.createElement('div'); colText.className='col-12 col-lg-5 req-text-col';
-      var tb=document.createElement('div'); tb.className='rte-toolbar'; tb.setAttribute('data-target', 'rte_' + Math.random().toString(36).slice(2));
-      var ed=document.createElement('div'); ed.className='rte'; ed.setAttribute('id', tb.getAttribute('data-target')); ed.setAttribute('contenteditable','true'); ed.setAttribute('data-placeholder','Describe the requirement...');
-      ed.innerHTML = initialHTML;
-      colText.append(tb, ed);
-
-      var colRem=document.createElement('div'); colRem.className='col-12 col-lg-1 d-grid';
-      var btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-outline-danger'; btn.innerHTML='<i class="bi bi-x-lg"></i>';
-      btn.addEventListener('click',function(){ wrap.remove(); updateWorkpackageTotals(); });
-      colRem.appendChild(btn);
-
-      wpSel.addEventListener('change', updateWorkpackageTotals);
-      estimateInput.addEventListener('input', updateWorkpackageTotals);
-
-      row.append(colType,colWp,colEstimate,colText,colRem);
-      wrap.append(row);
-
-      buildToolbar(tb);
-      return wrap;
-    }
-    function addRequirement(type,html,workpackage,estimateHours){
-      var item = createReqItem(type,html,workpackage,estimateHours);
-      document.getElementById('reqList').appendChild(item);
-      refreshWorkpackageOptions();
-      setReqWorkpackageValue(item.querySelector('.req-workpackage'), workpackage);
-      updateWorkpackageTotals();
-    }
-    document.getElementById('addOne').addEventListener('click',function(){ addRequirement(); });
-    document.getElementById('addThree').addEventListener('click',function(){ addRequirement(); addRequirement('Functional'); addRequirement('Non-functional'); });
-    document.getElementById('addWorkpackageBtn').addEventListener('click', function(){ addWorkpackage(); });
-    document.querySelectorAll('.section-workpackage-add').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        var field = btn.getAttribute('data-field');
-        var select = document.querySelector('.section-workpackage-select[data-field="' + field + '"]');
-        var workpackageKey = select ? select.value : '';
-        if(!workpackageKey){ alert('Please choose a workpackage first.'); return; }
-        var workpackages = getWorkpackages();
-        var idx = workpackages.findIndex(function(wp, i){ return (wp.id || wp.name || ('Workpackage ' + (i + 1))).trim() === workpackageKey; });
-        var label = idx >= 0 ? getWorkpackageLabel(workpackages[idx], idx + 1) : workpackageKey;
-        addSectionWorkpackageField(field, workpackageKey, label, '');
-        refreshWorkpackageOptions();
+    document.getElementById('logoInput').addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      readFileAsDataURL(file).then(function(dataUrl){
+        var img = document.getElementById('logoPreview');
+        img.src = dataUrl;
+        img.classList.remove('d-none');
       });
     });
 
-    function collectRequirements(){
-      var items=[].slice.call(document.querySelectorAll('.req-item'));
-      var grouped={'General':[],'Functional':[],'Non-functional':[]};
-      items.forEach(function(item){
-        var type=item.querySelector('select').value;
-        var html=(item.querySelector('.rte').innerHTML||'').trim();
-        var workpackage=(item.querySelector('.req-workpackage')||{}).value||'';
-        var estimateHours=parseEstimateHours((item.querySelector('.req-estimate-hours')||{}).value||'');
-        if(html) grouped[type].push({ html: html, workpackage: workpackage, estimateHours: estimateHours });
+    document.getElementById('diagramInput').addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      readFileAsDataURL(file).then(function(dataUrl){
+        var img = document.getElementById('diagramPreview');
+        img.src = dataUrl;
+        img.classList.remove('d-none');
       });
-      return grouped;
-    }
-
-    // ===== Image previews =====
-    var logoDataUrl=''; var diagramDataUrl='';
-    document.getElementById('logoInput').addEventListener('change',async function(e){
-      var f=e.target.files&&e.target.files[0]; if(!f)return;
-      logoDataUrl=await readFileAsDataURL(f);
-      var p=document.getElementById('logoPreview'); p.src=logoDataUrl; p.classList.remove('d-none');
-    });
-    document.getElementById('diagramInput').addEventListener('change',async function(e){
-      var f=e.target.files&&e.target.files[0]; if(!f)return;
-      diagramDataUrl=await readFileAsDataURL(f);
-      var p=document.getElementById('diagramPreview'); p.src=diagramDataUrl; p.classList.remove('d-none');
     });
 
-    // ===== Form Clear =====
-    function getHTML(id){ var el=document.getElementById(id); return el ? el.innerHTML : ''; }
-    function setHTML(id, html){ var el=document.getElementById(id); if(el) el.innerHTML = html || ''; }
-
-    function clearForm(){
-      if(!confirm('Clear all form fields?')) return;
-      document.getElementById('projectName').value='';
-      ['companyDesc','timeline','cost','stakeholders','currentLandscape','goals','constraints','assumptions','outOfScope','timeCostDesc','architectureDesc','deliverables','notes'].forEach(function(id){ setHTML(id,''); });
-      document.getElementById('workpackageList').innerHTML='';
-      addWorkpackage('Workpackage 1','Assessment');
-      document.getElementById('reqList').innerHTML=''; addRequirement();
-      document.getElementById('logoPreview').classList.add('d-none');
-      document.getElementById('diagramPreview').classList.add('d-none');
-      logoDataUrl=''; diagramDataUrl='';
-      showToast('Form cleared.');
-    }
-
-    document.getElementById('clearFormBtn').addEventListener('click', clearForm);
-
-    // ===== Generator using <template> =====
-    function generateHTML(){
-      function sanitize(html){ return (html || '').replace(/\n/g, '<br>'); }
-
-      var projectName = (document.getElementById('projectName').value || 'Project').trim();
-      var companyDesc = sanitize(getHTML('companyDesc'));
-      var timeline    = sanitize(getHTML('timeline'));
-      var cost        = sanitize(getHTML('cost'));
-      var stakeholders= sanitize(getHTML('stakeholders'));
-      var currentLandscape = sanitize(getHTML('currentLandscape'));
-      var goals       = sanitize(getHTML('goals'));
-      var constraints = sanitize(getHTML('constraints'));
-      var assumptions = sanitize(getHTML('assumptions'));
-      var outOfScope  = sanitize(getHTML('outOfScope'));
-      var timeCostDesc= sanitize(getHTML('timeCostDesc'));
-      var archDesc    = sanitize(getHTML('architectureDesc'));
-      var notes       = sanitize(getHTML('notes'));
-      var deliverables= sanitize(getHTML('deliverables'));
-      var reqItems = [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
-        return {
-          type: item.querySelector('select').value,
-          workpackage: (item.querySelector('.req-workpackage')||{}).value||'',
-          estimateHours: parseEstimateHours((item.querySelector('.req-estimate-hours')||{}).value||''),
-          html: (item.querySelector('.rte').innerHTML||'').trim()
-        };
-      }).filter(function(item){ return item.html; });
-      var workpackages = getWorkpackages();
-      var workpackageGroups = workpackages.map(function(wp, idx){
-        return {
-          key: (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim(),
-          label: getWorkpackageLabel(wp, idx+1),
-          grouped: {'General':[],'Functional':[],'Non-functional':[]},
-          metaGroups: [
-            { field:'outOfScope', title:'Out of Scope (Exclusions)', html: sanitize(wp.outOfScope || ''), text: htmlToText(wp.outOfScope || '') },
-            { field:'constraints', title:'Dependencies', html: sanitize(wp.constraints || ''), text: htmlToText(wp.constraints || '') },
-            { field:'assumptions', title:'Assumptions', html: sanitize(wp.assumptions || ''), text: htmlToText(wp.assumptions || '') },
-            { field:'stakeholders', title:'Stakeholders', html: sanitize(wp.stakeholders || ''), text: htmlToText(wp.stakeholders || '') },
-            { field:'deliverables', title:'Deliverables', html: sanitize(wp.deliverables || ''), text: htmlToText(wp.deliverables || '') }
-          ]
-        };
-      });
-      var unassigned = { key:'', label:'Unassigned', grouped:{'General':[],'Functional':[],'Non-functional':[]}, metaGroups:[] };
-      reqItems.forEach(function(item){
-        var grp = workpackageGroups.find(function(wp){ return wp.key === item.workpackage; });
-        if(!grp && item.workpackage){
-          grp = { key:item.workpackage, label:item.workpackage, grouped:{'General':[],'Functional':[],'Non-functional':[]}, metaGroups:[] };
-          workpackageGroups.push(grp);
-        }
-        (grp || unassigned).grouped[item.type].push(item);
-      });
-      function renderSection(title, body){
-        if(!htmlToText(body || '')) return '';
-        return '<section class="mb-4"><h3 class="text-primary h5">' + title + '</h3><div>' + body + '</div></section>';
-      }
-      function renderTypeList(grouped, type){
-        if(!grouped[type].length) return '';
-        return '<div class="mt-3"><h4 class="h6">' + type + '</h4><ul class="ps-3 mb-0">' + grouped[type].map(function(item){
-          var estimate = item.estimateHours ? ' <span class="small text-body-secondary">(' + item.estimateHours + ' h)</span>' : '';
-          return '<li>' + sanitize(item.html) + estimate + '</li>';
-        }).join('') + '</ul></div>';
-      }
-      function renderArchitectureSection(){
-        var hasDescription = htmlToText(archDesc || '');
-        var hasDiagram = !!(diagramDataUrl || '');
-        if(!hasDescription && !hasDiagram) return '';
-        return [
-          '<section class="mb-4">',
-          '<h3 class="text-primary h5">Project Architecture</h3>',
-          hasDiagram ? '<div class="mb-3 text-center"><img class="diagram-img img-fluid" src="' + (diagramDataUrl || '') + '" alt="Architecture diagram" onerror="this.style.display=\'none\'"></div>' : '',
-          hasDescription ? '<div><strong>Description</strong><div>' + archDesc + '</div></div>' : '',
-          '</section>'
-        ].join('');
-      }
-      function renderTimeCostSection(){
-        var hasTimeline = htmlToText(timeline || '');
-        var hasCost = htmlToText(cost || '');
-        var hasDescription = htmlToText(timeCostDesc || '');
-        if(!hasTimeline && !hasCost && !hasDescription) return '';
-        return [
-          '<section class="mb-4">',
-          '<h3 class="text-primary h5">Time &amp; Cost</h3>',
-          '<div class="row g-3">',
-          '<div class="col-md-6">',
-          '<div class="metric-label mb-2"><i class="bi bi-calendar-week fs-5"></i><span>Timeline (weeks)</span></div>',
-          '<div class="metric-box" data-editable="true">' + (timeline || '—') + '</div>',
-          '</div>',
-          '<div class="col-md-6">',
-          '<div class="metric-label mb-2"><i class="bi bi-stopwatch fs-5"></i><span>Cost (hours)</span></div>',
-          '<div class="metric-box" data-editable="true">' + (cost || '—') + '</div>',
-          '</div>',
-          '</div>',
-          hasDescription ? '<div class="mt-3"><strong>Description</strong><div>' + timeCostDesc + '</div></div>' : '',
-          '</section>'
-        ].join('');
-      }
-      function renderWorkpackageBlock(wp){
-        var requirementMarkup = renderTypeList(wp.grouped, 'General')
-          + renderTypeList(wp.grouped, 'Functional')
-          + renderTypeList(wp.grouped, 'Non-functional');
-        var totalHours = wp.grouped.General.concat(wp.grouped.Functional, wp.grouped['Non-functional']).reduce(function(sum, item){ return sum + parseEstimateHours(item.estimateHours); }, 0);
-        var detailMarkup = (wp.metaGroups || []).map(function(group){
-          if(!group.text) return '';
-          return '<section class="mb-3"><h4 class="h6 text-primary">' + group.title + '</h4><div>' + group.html + '</div></section>';
-        }).join('');
-        if(!requirementMarkup && !detailMarkup) return '';
-        return [
-          '<section class="mb-4">',
-          '<h3 class="text-primary h4">' + sanitize(wp.label) + (totalHours ? ' <span class="small text-body-secondary">(Total estimation: ' + totalHours + ' h)</span>' : '') + '</h3>',
-          requirementMarkup ? '<section class="mb-3"><h4 class="h6 text-primary">Requirements (Inclusions)</h4>' + requirementMarkup + '</section>' : '',
-          detailMarkup,
-          '</section>'
-        ].join('');
-      }
-      var generalProjectDetailsHTML = [
-        '<section class="mb-5">',
-        '<h2 class="text-primary h4">General Project Details</h2>',
-        renderSection('Company Description', companyDesc),
-        renderSection('Current Landscape Description', currentLandscape),
-        renderSection('Goals &amp; Objectives', goals),
-        renderArchitectureSection(),
-        '</section>'
-      ].join('');
-      var wpBlocks = workpackageGroups.map(renderWorkpackageBlock).join('') + renderWorkpackageBlock(unassigned);
-      var workpackagesSectionHTML = [
-        '<section class="mb-4">',
-        '<h2 class="text-primary h4">Workpackages</h2>',
-        (wpBlocks || '<p class="text-body-secondary"><em>No workpackage-specific details provided.</em></p>'),
-        '</section>'
-      ].join('\n');
-      var trailingSectionsHTML = [
-        renderTimeCostSection(),
-        renderSection('Additional Notes', notes)
-      ].join('');
-
-      var tmpl = document.getElementById('docTemplate').innerHTML;
-
-      var projectNameEsc = projectName.replace(/[&<>"]/g, function(s){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s];});
-      var docInstanceId = String(Date.now());
-      var html = tmpl
-        .split('[[PROJECT_NAME_ESC]]').join(projectNameEsc)
-        .replace('[[DOC_INSTANCE_ID]]', docInstanceId)
-        .replace('[[GENERAL_PROJECT_DETAILS_HTML]]', generalProjectDetailsHTML)
-        .replace('[[WORKPACKAGES_SECTION_HTML]]', workpackagesSectionHTML + trailingSectionsHTML)
-        .replace('[[LOGO_DATA_URL]]', logoDataUrl || '')
-        .replace('[[DIAGRAM_DATA_URL]]', diagramDataUrl || '');
-
-      var blob = new Blob([html], {type:'text/html'});
-      var url = URL.createObjectURL(blob);
-      var preview = window.open(url, '_blank');
-      if(!preview){
-        alert('Pop-up blocked. Please allow pop-ups to open the preview.');
-      }
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
-    }
-
-    document.getElementById('generateBtn').addEventListener('click', generateHTML);
-
-    // ===== DOCX Export =====
-    async function exportDocx(){
-      function htmlToText(html){
-        if(!html) return '';
-        html = html.replace(/<\s*br\s*\/?>/gi, '\n')
-                   .replace(/<\/p>/gi, '\n')
-                   .replace(/<\/li>/gi, '\n- ')
-                   .replace(/<\/?ul>|<\/?ol>|<\/?strong>|<\/?em>|<\/?b>|<\/?i>|<\/?u>|<\/?span>|<\/?div>|<\/?p>|<\/?h\d>|<\/?section>|<\/?figure>|<\/?img[^>]*>/gi, '');
-        html = html.replace(/<[^>]+>/g, '');
-        return html.replace(/\n{3,}/g, '\n\n').trim();
-      }
-
-      var projectName = (document.getElementById('projectName').value || 'Project').trim();
-
-      var fields = [
-        ['Company Description', htmlToText(getHTML('companyDesc'))],
-        ['Stakeholders',        htmlToText(getHTML('stakeholders'))],
-        ['Current Landscape Description', htmlToText(getHTML('currentLandscape'))],
-        ['Goals & Objectives',  htmlToText(getHTML('goals'))],
-        ['Project Architecture - Description', htmlToText(getHTML('architectureDesc'))],
-      ];
-
-      var workpackages = getWorkpackages();
-      var reqItemsForTotals = [].slice.call(document.querySelectorAll('.req-item')).map(function(item){
-        return {
-          workpackage: (item.querySelector('.req-workpackage') || {}).value || '',
-          estimateHours: parseEstimateHours((item.querySelector('.req-estimate-hours') || {}).value || '')
-        };
-      });
-      var workpackageText = workpackages.length
-        ? workpackages.map(function(wp, idx){
-            var key = (wp.id || wp.name || ('Workpackage ' + (idx+1))).trim();
-            var total = reqItemsForTotals.filter(function(r){ return r.workpackage === key; }).reduce(function(sum, r){ return sum + r.estimateHours; }, 0);
-            return (idx+1)+'. ' + getWorkpackageLabel(wp, idx+1) + ' (Total estimation: ' + total + ' h)';
-          }).join('\n')
-        : '—';
-      fields.push(['Workpackages', workpackageText]);
-
-      var req = collectRequirements();
-      function joinList(arr){
-        return (arr||[]).map(function(item,i){
-          var reqText = htmlToText(item.html||'');
-          var wpText = item.workpackage ? ' [Workpackage: ' + item.workpackage + ']' : '';
-          var estText = item.estimateHours ? ' [Estimation: ' + item.estimateHours + ' h]' : '';
-          return (i+1)+'. '+reqText+wpText+estText;
-        }).join('\n');
-      }
-      var reqText = '';
-      if(req.General.length)       reqText += 'General:\n' + joinList(req.General) + '\n\n';
-      if(req.Functional.length)    reqText += 'Functional:\n' + joinList(req.Functional) + '\n\n';
-      if(req['Non-functional'].length) reqText += 'Non-functional:\n' + joinList(req['Non-functional']) + '\n\n';
-      fields.push(['Requirements (Inclusions)', reqText.trim() || '—']);
-
-      function buildSectionDetailText(field){
-        return workpackages.map(function(wp, idx){
-          var detailText = htmlToText(wp[field] || '');
-          if(!detailText) return '';
-          return getWorkpackageLabel(wp, idx + 1) + ': ' + detailText;
-        }).filter(Boolean).join('\n');
-      }
-      fields.push(['Dependencies',  [htmlToText(getHTML('constraints')), buildSectionDetailText('constraints')].filter(Boolean).join('\n')]);
-      fields.push(['Assumptions',  [htmlToText(getHTML('assumptions')), buildSectionDetailText('assumptions')].filter(Boolean).join('\n')]);
-      fields.push(['Out of Scope (Exclusions)', [htmlToText(getHTML('outOfScope')), buildSectionDetailText('outOfScope')].filter(Boolean).join('\n')]);
-
-      fields.push(['Timeline (weeks)', htmlToText(getHTML('timeline'))]);
-      fields.push(['Cost (hours)',     htmlToText(getHTML('cost'))]);
-      fields.push(['Time & Cost - Description', htmlToText(getHTML('timeCostDesc'))]);
-
-      fields.push(['Deliverables', [htmlToText(getHTML('deliverables')), buildSectionDetailText('deliverables')].filter(Boolean).join('\n')]);
-      fields[1][1] = [fields[1][1], buildSectionDetailText('stakeholders')].filter(Boolean).join('\n');
-      fields.push(['Additional Notes', htmlToText(getHTML('notes'))]);
-
-      const { Document, Packer, Paragraph, HeadingLevel } = window.docx;
-
-      const paragraphs = [];
-      paragraphs.push(new Paragraph({ text: projectName, heading: HeadingLevel.TITLE }));
-
-      for (const [title, body] of fields){
-        paragraphs.push(new Paragraph({ text: title, heading: HeadingLevel.HEADING_2 }));
-        if (body && body.length){
-          body.split('\n').forEach(line => {
-            paragraphs.push(new Paragraph({ text: line }));
-          });
-        } else {
-          paragraphs.push(new Paragraph({ text: '—' }));
-        }
-      }
-
-      const doc = new Document({
-        sections: [ { properties: {}, children: paragraphs } ]
-      });
-
-      const blob = await Packer.toBlob(doc);
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = (projectName.replace(/\s+/g,'_') || 'Project') + '_Requirements.docx';
-      a.click();
-    }
-    document.getElementById('exportDocxBtn').addEventListener('click', function(e){ e.preventDefault(); exportDocx(); });
-// ===== CSV Export/Import (Full Page) =====
-    function escapeCsvField(v){
-      v = (v ?? '').toString().replace(/\r?\n/g, '\\n');
-      if (/[",\n]/.test(v)) {
-        v = '"' + v.replace(/"/g, '""') + '"';
-      }
-      return v;
-    }
-    function unescapeCsvField(v){
-      if (v.startsWith('"') && v.endsWith('"')) {
-        v = v.slice(1, -1).replace(/""/g, '"');
-      }
-      return v.replace(/\\n/g, '\n');
-    }
-    function buildFullRows(){
-      var rows = [['section','key','value','extra']];
-      // META: all inputs, textareas, selects with an id
-      var fields = document.querySelectorAll('input, textarea, select');
-      fields.forEach(function(el){
-        if (!el.id) return;
-        var tag = el.tagName.toLowerCase();
-        var type = (el.getAttribute('type') || '').toLowerCase();
-        var value = '';
-        var extra = '';
-        if (tag === 'select') {
-          if (el.multiple) {
-            var vals = [].slice.call(el.selectedOptions).map(function(o){ return o.value; });
-            value = vals.join(';');
-          } else {
-            value = el.value || '';
-          }
-        } else if (type === 'checkbox') {
-          value = el.checked ? 'true' : 'false';
-          extra = el.value || 'on';
-        } else if (type === 'radio') {
-          if (el.checked) {
-            value = el.value || 'on';
-          } else {
-            return; // skip unchecked radios; importer will set based on checked value
-          }
-        } else {
-          value = el.value || '';
-        }
-        rows.push(['meta', el.id, value, extra]);
-      });
-      // REQUIREMENTS
-      var items = [].slice.call(document.querySelectorAll('.req-item'));
-      items.forEach(function(item, idx){
-        var typeSel = item.querySelector('select');
-        var type = typeSel ? typeSel.value : '';
-        var html = (item.querySelector('.rte') || {}).innerHTML || '';
-        var workpackage = (item.querySelector('.req-workpackage') || {}).value || '';
-        rows.push(['requirement', String(idx), type, JSON.stringify({ html: html, workpackage: workpackage, estimateHours: (item.querySelector('.req-estimate-hours') || {}).value || '' })]);
-      });
-      // WORKPACKAGES
-      var workpackages = getWorkpackages();
-      workpackages.forEach(function(wp, idx){
-        rows.push(['workpackage', String(idx), wp.id || '', JSON.stringify({ name: wp.name || '', constraints: wp.constraints || '', assumptions: wp.assumptions || '', outOfScope: wp.outOfScope || '', deliverables: wp.deliverables || '', stakeholders: wp.stakeholders || '' })]);
-      });
-      return rows;
-    }
-    function exportCsvFull(){
-      var rows = buildFullRows();
-      var csv = rows.map(function(cols){ return cols.map(escapeCsvField).join(','); }).join('\n');
-      var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      var proj = (document.getElementById('projectName')?.value || 'Project').replace(/\s+/g,'_');
-      a.download = proj + '_full_export.csv';
-      a.click();
-    }
-    function parseCsv(text){
-      var rows = [];
-      var i = 0, field = '', row = [], inQuotes = false;
-      while (i < text.length){
-        var c = text[i];
-        if (inQuotes){
-          if (c === '"'){
-            if (text[i+1] === '"'){ field += '"'; i++; }
-            else { inQuotes = false; }
-          } else {
-            field += c;
-          }
-        } else {
-          if (c === '"'){ inQuotes = true; }
-          else if (c === ','){ row.push(field); field = ''; }
-          else if (c === '\n' || c === '\r'){
-            if (c === '\r' && text[i+1] === '\n') i++;
-            row.push(field); field = '';
-            if (row.length) rows.push(row);
-            row = [];
-          } else {
-            field += c;
-          }
-        }
-        i++;
-      }
-      row.push(field);
-      if (row.length && !(row.length === 1 && row[0] === '')) rows.push(row);
-      return rows;
-    }
-    function loadCsvFullFromFile(file){
-      var r = new FileReader();
-      r.onload = function(){
-        try{
-          var rows = parseCsv(r.result || '');
-          if (!rows.length) { alert('CSV appears empty.'); return; }
-          var header = rows[0].map(function(h){ return h.trim().toLowerCase(); });
-          var idxSection = header.indexOf('section');
-          var idxKey = header.indexOf('key');
-          var idxValue = header.indexOf('value');
-          var idxExtra = header.indexOf('extra');
-          if (idxSection === -1 || idxKey === -1 || idxValue === -1){
-            alert('CSV must include headers: section,key,value[,extra]'); return;
-          }
-          // First, restore meta fields
-          for (var rix=1; rix<rows.length; rix++){
-            var cols = rows[rix];
-            var section = (cols[idxSection] || '').toLowerCase();
-            if (section !== 'meta') continue;
-            var key = cols[idxKey] || '';
-            var val = cols[idxValue] || '';
-            var extra = (idxExtra !== -1 ? cols[idxExtra] : '');
-            var el = document.getElementById(key);
-            if (!el) continue;
-            var tag = el.tagName.toLowerCase();
-            var type = (el.getAttribute('type') || '').toLowerCase();
-            if (tag === 'select'){
-              if (el.multiple){
-                var wanted = (val || '').split(';').map(function(s){ return s.trim(); });
-                [].slice.call(el.options).forEach(function(o){ o.selected = wanted.includes(o.value); });
-              } else {
-                el.value = val;
-              }
-            } else if (type === 'checkbox'){
-              el.checked = (val === 'true');
-            } else if (type === 'radio'){
-              // For radios, we set the one with matching value
-              var group = document.querySelectorAll('input[type="radio"][name="'+el.name+'"]');
-              [].slice.call(group).forEach(function(radio){
-                radio.checked = (radio.value === val);
-              });
-            } else {
-              el.value = val;
-            }
-          }
-          // Then rebuild workpackages
-          var wpRows = rows.filter(function(r, idx){
-            if (idx === 0) return false;
-            return (r[idxSection] || '').toLowerCase() === 'workpackage';
-          });
-          var wpList = document.getElementById('workpackageList');
-          if (wpList) wpList.innerHTML = '';
-          if (wpRows.length && typeof addWorkpackage === 'function'){
-            wpRows.sort(function(a,b){
-              var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
-              return ai - bi;
-            });
-            wpRows.forEach(function(rw){
-              var wpMeta = {};
-              try {
-                wpMeta = JSON.parse((idxExtra !== -1 ? rw[idxExtra] : '') || '{}') || {};
-              } catch(_e) {
-                wpMeta = { name: (idxExtra !== -1 ? rw[idxExtra] : '') || '' };
-              }
-              addWorkpackage(rw[idxValue] || '', wpMeta.name || '', wpMeta);
-            });
-          } else if (typeof addWorkpackage === 'function') {
-            addWorkpackage('Workpackage 1', 'Assessment');
-          }
-
-          // Then rebuild requirements
-          var reqRows = rows.filter(function(r, idx){
-            if (idx === 0) return false;
-            return (r[idxSection] || '').toLowerCase() === 'requirement';
-          });
-          var list = document.getElementById('reqList');
-          if (list) list.innerHTML = '';
-          if (reqRows.length){
-            // Sort by numeric key/index
-            reqRows.sort(function(a,b){
-              var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
-              return ai - bi;
-            });
-            reqRows.forEach(function(rw){
-              var type = rw[idxValue] || 'General';
-              var payload = (idxExtra !== -1 ? rw[idxExtra] : '');
-              var html = payload;
-              var workpackage = '';
-              var estimateHours = '';
-              try {
-                var parsed = JSON.parse(payload || '{}');
-                if (parsed && typeof parsed === 'object') {
-                  html = parsed.html || '';
-                  workpackage = parsed.workpackage || '';
-                  estimateHours = parsed.estimateHours || '';
-                }
-              } catch(_e) {}
-              if (typeof addRequirement === 'function'){
-                addRequirement(type, html, workpackage, estimateHours);
-              }
-            });
-          } else if (typeof addRequirement === 'function') {
-            addRequirement();
-          }
-          showToast && showToast('Full page loaded from CSV.');
-        }catch(e){
-          console.error(e);
-          alert('Failed to load CSV: ' + e.message);
-        }
-      };
-      r.readAsText(file);
-    }
-
-    
-    // Shadow when toolbar sticks
-    (function(){
-      var bar = document.querySelector('.req-sticky-toolbar');
-      if (!bar) return;
-      var obs = new IntersectionObserver(function(entries){
-        entries.forEach(function(e){
-          if (e.intersectionRatio < 1){
-            bar.style.boxShadow = '0 2px 8px rgba(0,0,0,.07)';
-          } else {
-            bar.style.boxShadow = 'none';
-          }
-        });
-      }, {threshold: [1]});
-      obs.observe(bar);
-    })();
-
-    
-    // ===== Ensure all fields have IDs for stable export/import =====
-    function ensureFieldIds(){
-      var idx = 0;
-      var fields = document.querySelectorAll('input, textarea, select');
-      fields.forEach(function(el){
-        if (!el.id || el.id.trim() === ''){
-          var base = (el.getAttribute('name') || el.getAttribute('data-key') || el.tagName.toLowerCase() + '-' + (el.type || 'text')).replace(/\s+/g,'-');
-          el.id = 'auto_' + base + '_' + (idx++);
-        }
-      });
-    }
-    // Call early
-    ensureFieldIds();
-
-    
-    function buildFullRows(){
-      var rows = [['section','key','value','extra']];
-      ensureFieldIds();
-      var seenRadioNames = new Set();
-      var fields = document.querySelectorAll('input, textarea, select');
-      fields.forEach(function(el){
-        var tag = el.tagName.toLowerCase();
-        var type = (el.getAttribute('type') || '').toLowerCase();
-        var key = el.id;
-        var value = '';
-        var extra = '';
-        if (tag === 'select') {
-          if (el.multiple) {
-            var vals = [].slice.call(el.selectedOptions).map(function(o){ return o.value; });
-            value = vals.join(';');
-          } else {
-            value = el.value || '';
-          }
-        } else if (type === 'checkbox') {
-          value = el.checked ? 'true' : 'false';
-          extra = el.value || 'on';
-        } else if (type === 'radio') {
-          // only capture once per radio group (by name)
-          var name = el.getAttribute('name');
-          if (!name || seenRadioNames.has(name)) return;
-          seenRadioNames.add(name);
-          var checked = document.querySelector('input[type="radio"][name="'+name+'"]:checked');
-          value = checked ? (checked.value || 'on') : '';
-          key = 'radio::' + name; // use group key
-        } else {
-          value = el.value || '';
-        }
-        rows.push(['meta', key, value, extra]);
-      });
-      // REQUIREMENTS
-      var items = [].slice.call(document.querySelectorAll('.req-item'));
-      items.forEach(function(item, idx){
-        var typeSel = item.querySelector('select');
-        var type = typeSel ? typeSel.value : '';
-        var html = (item.querySelector('.rte') || {}).innerHTML || '';
-        var workpackage = (item.querySelector('.req-workpackage') || {}).value || '';
-        rows.push(['requirement', String(idx), type, JSON.stringify({ html: html, workpackage: workpackage, estimateHours: (item.querySelector('.req-estimate-hours') || {}).value || '' })]);
-      });
-      // WORKPACKAGES
-      var workpackages = getWorkpackages();
-      workpackages.forEach(function(wp, idx){
-        rows.push(['workpackage', String(idx), wp.id || '', JSON.stringify({ name: wp.name || '', constraints: wp.constraints || '', assumptions: wp.assumptions || '', outOfScope: wp.outOfScope || '', deliverables: wp.deliverables || '', stakeholders: wp.stakeholders || '' })]);
-      });
-      return rows;
-    }
-
-    
-    function exportCsvFull(){
-      try{
-        var rows = buildFullRows();
-        var csv = rows.map(function(cols){ return cols.map(escapeCsvField).join(','); }).join('\n');
-        var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        var proj = (document.getElementById('projectName')?.value || 'Project').replace(/\s+/g,'_');
-        a.download = proj + '_full_export.csv';
-        a.click();
-      }catch(e){
-        console.error(e);
-        alert('Export failed: ' + e.message);
-      }
-    }
-
-    
-    function loadCsvFullFromFile(file){
-      var r = new FileReader();
-      r.onload = function(){
-        try{
-          var rows = parseCsv(r.result || '');
-          if (!rows.length) { alert('CSV appears empty.'); return; }
-          var header = rows[0].map(function(h){ return h.trim().toLowerCase(); });
-          var idxSection = header.indexOf('section');
-          var idxKey = header.indexOf('key');
-          var idxValue = header.indexOf('value');
-          var idxExtra = header.indexOf('extra');
-          if (idxSection === -1 || idxKey === -1 || idxValue === -1){
-            alert('CSV must include headers: section,key,value[,extra]'); return;
-          }
-          ensureFieldIds();
-          // First, restore meta fields
-          rows.forEach(function(cols, i){
-            if (i === 0) return; // header
-            var section = (cols[idxSection] || '').toLowerCase();
-            if (section !== 'meta') return;
-            var key = cols[idxKey] || '';
-            var val = cols[idxValue] || '';
-            var extra = (idxExtra !== -1 ? cols[idxExtra] : '');
-            if (key.startsWith('radio::')){
-              var name = key.slice('radio::'.length);
-              var radio = document.querySelector('input[type="radio"][name="'+name+'"][value="'+val+'"]');
-              if (radio) radio.checked = true;
-              return;
-            }
-            var el = document.getElementById(key);
-            if (!el) return;
-            var tag = el.tagName.toLowerCase();
-            var type = (el.getAttribute('type') || '').toLowerCase();
-            if (tag === 'select'){
-              if (el.multiple){
-                var wanted = (val || '').split(';').map(function(s){ return s.trim(); });
-                [].slice.call(el.options).forEach(function(o){ o.selected = wanted.includes(o.value); });
-              } else {
-                el.value = val;
-              }
-            } else if (type === 'checkbox'){
-              el.checked = (val === 'true');
-            } else {
-              el.value = val;
-            }
-          });
-          // Then rebuild workpackages
-          var wpRows = rows.filter(function(r, idx){
-            if (idx === 0) return false;
-            return (r[idxSection] || '').toLowerCase() === 'workpackage';
-          });
-          var wpList = document.getElementById('workpackageList');
-          if (wpList) wpList.innerHTML = '';
-          if (wpRows.length && typeof addWorkpackage === 'function'){
-            wpRows.sort(function(a,b){
-              var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
-              return ai - bi;
-            });
-            wpRows.forEach(function(rw){
-              var wpMeta = {};
-              try {
-                wpMeta = JSON.parse((idxExtra !== -1 ? rw[idxExtra] : '') || '{}') || {};
-              } catch(_e) {
-                wpMeta = { name: (idxExtra !== -1 ? rw[idxExtra] : '') || '' };
-              }
-              addWorkpackage(rw[idxValue] || '', wpMeta.name || '', wpMeta);
-            });
-          } else if (typeof addWorkpackage === 'function') {
-            addWorkpackage('Workpackage 1', 'Assessment');
-          }
-
-          // Then rebuild requirements
-          var reqRows = rows.filter(function(r, idx){
-            if (idx === 0) return false;
-            return (r[idxSection] || '').toLowerCase() === 'requirement';
-          });
-          var list = document.getElementById('reqList');
-          if (list) list.innerHTML = '';
-          if (reqRows.length){
-            reqRows.sort(function(a,b){
-              var ai = parseInt(a[idxKey]||'0',10), bi = parseInt(b[idxKey]||'0',10);
-              return ai - bi;
-            });
-            reqRows.forEach(function(rw){
-              var type = rw[idxValue] || 'General';
-              var payload = (idxExtra !== -1 ? rw[idxExtra] : '');
-              var html = payload;
-              var workpackage = '';
-              var estimateHours = '';
-              try {
-                var parsed = JSON.parse(payload || '{}');
-                if (parsed && typeof parsed === 'object') {
-                  html = parsed.html || '';
-                  workpackage = parsed.workpackage || '';
-                  estimateHours = parsed.estimateHours || '';
-                }
-              } catch(_e) {}
-              if (typeof addRequirement === 'function'){
-                addRequirement(type, html, workpackage, estimateHours);
-              }
-            });
-          } else if (typeof addRequirement === 'function') {
-            addRequirement();
-          }
-          if (typeof showToast === 'function') showToast('Full page loaded from CSV.');
-        }catch(e){
-          console.error(e);
-          alert('Failed to load CSV: ' + e.message);
-        }
-      };
-      r.readAsText(file);
-    }
-
-    // ===== Toast helper =====
-    function showToast(msg){
-      var el = document.getElementById('liveToast');
-      if(!el){
-        el = document.createElement('div');
-        el.id = 'liveToast';
-        el.className = 'toast align-items-center text-bg-primary border-0 position-fixed bottom-0 end-0 m-3';
-        el.setAttribute('role','alert'); el.setAttribute('aria-live','assertive'); el.setAttribute('aria-atomic','true');
-        el.innerHTML = '<div class="d-flex"><div class="toast-body"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>';
-        document.body.appendChild(el);
-      }
-      el.querySelector('.toast-body').textContent = msg;
-      var t = bootstrap.Toast.getOrCreateInstance(el, { delay: 1500 });
-      t.show();
-    }
-
-    // ===== Init =====
     initRTEs();
-    addWorkpackage('Workpackage 1','Assessment');
-    addRequirement();
-      // Export / Import (Full CSV)
-    var exportCsvBtn = document.getElementById('exportCsvBtn');
-    if (exportCsvBtn){
-      exportCsvBtn.addEventListener('click', function(e){ e.preventDefault(); exportCsvFull(); });
-    }
-    var loadCsvInput = document.getElementById('loadCsvInput');
-    if (loadCsvInput){
-      loadCsvInput.addEventListener('change', function(e){ if(e.target.files && e.target.files[0]) loadCsvFullFromFile(e.target.files[0]); });
-    }
-    // FAB add requirement
-    var fab = document.getElementById('fabAddRequirement');
-    if (fab){
-      fab.addEventListener('click', function(){ if (typeof addRequirement === 'function') addRequirement(); });
-    }
-
-</script>
-<!-- === JSON Export/Import (safe injection) === -->
-<script>
-(function(){
-  function buildFullData(){
-    function g(id){ return document.getElementById(id); }
-    function getInner(id){ return g(id) ? g(id).innerHTML : ''; }
-    var reqItems = Array.prototype.slice.call(document.querySelectorAll('.req-item')).map(function(item){
-      var sel  = item.querySelector('select');
-      var rte  = item.querySelector('.rte');
-      var wpSel = item.querySelector('.req-workpackage');
-      return { type: sel ? sel.value : 'General', workpackage: wpSel ? wpSel.value : '', estimateHours: (item.querySelector('.req-estimate-hours') || {}).value || '', html: rte ? rte.innerHTML : '' };
-    });
-    var workpackages = (typeof window.getWorkpackages === 'function') ? window.getWorkpackages() : [];
-    return {
-      projectName: (g('projectName') && g('projectName').value) || '',
-      companyDesc: getInner('companyDesc'),
-      timeline: getInner('timeline'),
-      cost: getInner('cost'),
-      stakeholders: getInner('stakeholders'),
-      currentLandscape: getInner('currentLandscape'),
-      goals: getInner('goals'),
-      constraints: getInner('constraints'),
-      assumptions: getInner('assumptions'),
-      outOfScope: getInner('outOfScope'),
-      timeCostDesc: getInner('timeCostDesc'),
-      architectureDesc: getInner('architectureDesc'),
-      deliverables: getInner('deliverables'),
-      notes: getInner('notes'),
-      logo: (typeof window.logoDataUrl !== 'undefined' && window.logoDataUrl) ? window.logoDataUrl : '',
-      diagram: (typeof window.diagramDataUrl !== 'undefined' && window.diagramDataUrl) ? window.diagramDataUrl : '',
-      workpackages: workpackages,
-      reqs: reqItems
-    };
-  }
-
-  function applyData(d){
-    function g(id){ return document.getElementById(id); }
-    function setHTML(id, val){ var el = g(id); if (el) el.innerHTML = val || ''; }
-    if (g('projectName')) g('projectName').value = d.projectName || '';
-    setHTML('companyDesc',   d.companyDesc   || '');
-    setHTML('timeline',      d.timeline      || '');
-    setHTML('cost',          d.cost          || '');
-    setHTML('stakeholders',  d.stakeholders  || '');
-    setHTML('currentLandscape', d.currentLandscape || '');
-    setHTML('goals',         d.goals         || '');
-    setHTML('constraints',   d.constraints   || '');
-    setHTML('assumptions',   d.assumptions   || '');
-    setHTML('outOfScope',    d.outOfScope    || '');
-    setHTML('timeCostDesc',  d.timeCostDesc  || '');
-    setHTML('architectureDesc', d.architectureDesc || '');
-    setHTML('deliverables',  d.deliverables  || '');
-    setHTML('notes',         d.notes         || '');
-    var wpList = document.getElementById('workpackageList');
-    if (wpList) wpList.innerHTML = '';
-    if (Array.isArray(d.workpackages) && d.workpackages.length && typeof window.addWorkpackage === 'function'){
-      d.workpackages.forEach(function(w){ window.addWorkpackage(w.id || '', w.name || '', w); });
-    } else if (typeof window.addWorkpackage === 'function') {
-      window.addWorkpackage('Workpackage 1', 'Assessment');
-    }
-    var list = document.getElementById('reqList');
-    if (list) list.innerHTML = '';
-    if (Array.isArray(d.reqs) && d.reqs.length && typeof window.addRequirement === 'function'){
-      d.reqs.forEach(function(r){ window.addRequirement(r.type || 'General', r.html || '', r.workpackage || '', r.estimateHours || ''); });
-    } else if (typeof window.addRequirement === 'function') {
-      window.addRequirement();
-    }
-    window.logoDataUrl    = d.logo    || '';
-    window.diagramDataUrl = d.diagram || '';
-    var lp = document.getElementById('logoPreview');
-    var dp = document.getElementById('diagramPreview');
-    if (lp){ if (window.logoDataUrl){ lp.src = window.logoDataUrl; lp.classList.remove('d-none'); } else { lp.classList.add('d-none'); } }
-    if (dp){ if (window.diagramDataUrl){ dp.src = window.diagramDataUrl; dp.classList.remove('d-none'); } else { dp.classList.add('d-none'); } }
-  }
-
-  function exportJsonFull(){
-    try{
-      var data = buildFullData();
-      var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      var proj = (document.getElementById('projectName')?.value || 'Project').replace(/\s+/g,'_');
-      a.download = proj + '_full_export.json';
-      a.click();
-    }catch(e){
-      console.error(e);
-      alert('Export failed: ' + e.message);
-    }
-  }
-
-  function loadJsonFullFromFile(file){
-    var r = new FileReader();
-    r.onload = function(){
-      try{
-        var d = JSON.parse(r.result || '{}');
-        applyData(d);
-        if (typeof window.showToast === 'function') window.showToast('Full page loaded from JSON.');
-      }catch(e){
-        console.error(e);
-        alert('Failed to load JSON: ' + e.message);
-      }
-    };
-    r.readAsText(file);
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    var exportBtn = document.getElementById('exportJsonBtn');
-    if (exportBtn){
-      exportBtn.addEventListener('click', function(e){ e.preventDefault(); exportJsonFull(); });
-    }
-    var loadInput = document.getElementById('loadJsonInput');
-    if (loadInput){
-      loadInput.addEventListener('change', function(e){
-        if (e.target.files && e.target.files[0]) loadJsonFullFromFile(e.target.files[0]);
-      });
-    }
-  });
-})();
-</script>
+  </script>
 </body>
 </html>
