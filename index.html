@@ -544,25 +544,58 @@
   <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/lux/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
-    #editableRoot[contenteditable="true"]{outline:2px dashed var(--bs-border-color);border-radius:.5rem;padding:.5rem}
-    .doc-toolbar{position:sticky;top:0;z-index:1020;backdrop-filter:blur(6px)}
-    .doc-rte-toolbar{background: rgba(0,0,0,0.04); border-top:1px solid var(--bs-border-color); border-bottom:1px solid var(--bs-border-color);}
-    .rte-toolbar .btn { padding:.25rem .5rem; }
-    .logo-img{height:32px;object-fit:contain}
-    .diagram-img{max-height:45vh;object-fit:contain}
-    .metric-label{display:flex;align-items:center;gap:.5rem;color:var(--bs-secondary-color)}
-    .metric-box{min-height:48px;border:2px solid var(--bs-border-color);border-radius:.5rem;padding:.75rem}
-    #content{font-weight:600;}
-    #content h1,#content h2,#content h3,#content h4,#content h5,#content h6{font-weight:700;}
-    #content h1, #content h2, #content h3, #content h4, #content h5, #content h6{
-      color: var(--bs-primary);
-      background: color-mix(in srgb, var(--bs-primary) 12%, transparent);
-      border-left: .4rem solid color-mix(in srgb, var(--bs-primary) 80%, black);
-      padding: .45rem .7rem;
-      border-radius: .5rem;
-      margin-top: 1.25rem;
+    :root {
+      --app-ink: #172033;
+      --app-muted: #667085;
+      --app-panel: rgba(255, 255, 255, .96);
+      --app-border: rgba(31, 41, 55, .12);
+      --app-purple: #5b5fc7;
+      --app-violet: #7c3aed;
+      --app-cyan: #14b8c4;
+      --bs-primary: #5b5fc7;
+      --bs-primary-rgb: 91, 95, 199;
+      --bs-body-color: var(--app-ink);
+      --bs-secondary-color: var(--app-muted);
+      --bs-body-bg: #f5f8ff;
+      --bs-border-color: var(--app-border);
+      --bs-border-radius: 1rem;
+      --bs-border-radius-sm: .75rem;
+      --bs-border-radius-lg: 1.25rem;
+      --bs-font-sans-serif: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    @media print{ .doc-toolbar,.doc-rte-toolbar{display:none !important} body{margin:0} }
+    *{box-sizing:border-box}
+    body{
+      min-height:100vh;
+      color:var(--app-ink);
+      background:
+        radial-gradient(circle at 16% 4%, rgba(124, 58, 237, .14), transparent 24rem),
+        radial-gradient(circle at 92% 2%, rgba(20, 184, 196, .13), transparent 28rem),
+        linear-gradient(180deg, #f4f6fb 0%, #f8fafc 44%, #ffffff 100%);
+    }
+    body::before{
+      content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+      background-image:linear-gradient(rgba(91,95,199,.035) 1px, transparent 1px),linear-gradient(90deg, rgba(91,95,199,.035) 1px, transparent 1px);
+      background-size:36px 36px;mask-image:linear-gradient(180deg, rgba(0,0,0,.55), transparent 65%);
+    }
+    #editableRoot[contenteditable="true"]{outline:2px dashed rgba(91,95,199,.35);border-radius:1rem;padding:.75rem}
+    .doc-toolbar{position:sticky;top:0;z-index:1020;background:rgba(255,255,255,.88)!important;border-bottom:1px solid var(--app-border);box-shadow:0 10px 30px rgba(17,24,39,.06);backdrop-filter:blur(18px)}
+    .doc-toolbar .container,.doc-container{width:min(92vw,1500px);max-width:none}
+    .navbar-brand{color:var(--app-ink)!important;display:inline-flex;align-items:center;gap:.75rem;letter-spacing:-.02em;text-transform:none}
+    .brand-mark{display:inline-grid;place-items:center;width:2.4rem;height:2.4rem;border-radius:.65rem;color:#fff;background:linear-gradient(135deg,var(--app-purple),var(--app-violet));box-shadow:0 12px 28px rgba(91,95,199,.26);font-weight:900;font-size:1.1rem}
+    .doc-toolbar .btn,.btn{border-radius:.85rem;text-transform:none;letter-spacing:0;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;min-height:2.45rem;padding:.55rem 1rem}
+    .doc-toolbar .btn{border-color:rgba(91,95,199,.18);background:rgba(255,255,255,.82);color:var(--app-ink);box-shadow:0 6px 18px rgba(17,24,39,.05)}
+    .doc-toolbar .btn:hover{border-color:rgba(91,95,199,.35);background:rgba(91,95,199,.08);color:var(--bs-primary)}
+    .doc-rte-toolbar{background:rgba(255,255,255,.9);border-bottom:1px solid var(--app-border);box-shadow:0 12px 34px rgba(17,24,39,.07);backdrop-filter:blur(16px)}
+    .rte-toolbar{display:flex;flex-wrap:wrap;gap:.35rem}.rte-toolbar .btn{padding:.25rem .5rem;color:var(--bs-primary);border-color:rgba(91,95,199,.22);background:rgba(91,95,199,.06)}
+    .logo-img{height:32px;object-fit:contain}.diagram-img{max-height:45vh;object-fit:contain;border-radius:1rem;box-shadow:0 16px 42px rgba(17,24,39,.07)}
+    .doc-hero,.doc-card{border:1px solid var(--app-border);border-radius:1.25rem;background:var(--app-panel);box-shadow:0 18px 50px rgba(17,24,39,.08);backdrop-filter:blur(16px)}
+    .doc-hero{margin:1.5rem 0 1.25rem;padding:clamp(1.25rem,2.4vw,2rem)}.eyebrow{display:inline-flex;align-items:center;gap:.4rem;width:fit-content;margin-bottom:.85rem;padding:.38rem .7rem;border-radius:999px;color:#4c1d95;background:rgba(124,58,237,.10);font-size:.74rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .doc-hero h1{margin:0;font-size:clamp(2rem,4vw,3.85rem);line-height:1.02;letter-spacing:-.055em;text-transform:none}.hero-copy{max-width:780px;margin:1rem 0 0;color:var(--app-muted);font-size:clamp(1rem,1.4vw,1.12rem);line-height:1.65}
+    .doc-card{padding:clamp(1rem,2vw,1.6rem);overflow:hidden}.metric-label{display:flex;align-items:center;gap:.5rem;color:var(--app-muted);font-weight:700}.metric-box{min-height:48px;border:1px solid var(--app-border);border-radius:.85rem;background:rgba(255,255,255,.92);padding:.9rem 1rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.72)}
+    #content{font-weight:600;line-height:1.65}#content section{scroll-margin-top:6rem}#content h1,#content h2,#content h3,#content h4,#content h5,#content h6{font-weight:800;text-transform:none;letter-spacing:-.01em}
+    #content h2,#content h3,#content h4,#content h5,#content h6{color:var(--app-ink);background:linear-gradient(135deg,rgba(91,95,199,.08),rgba(20,184,196,.06));border-left:.4rem solid var(--bs-primary);padding:.55rem .8rem;border-radius:.85rem;margin-top:1.25rem}
+    #content .text-primary{color:var(--bs-primary)!important}#content .text-body-secondary{color:var(--app-muted)!important}#content ul{padding-left:1.35rem}#content li{margin-bottom:.35rem}
+    @media print{.doc-toolbar,.doc-rte-toolbar{display:none!important}body{margin:0;background:#fff}body::before{display:none}.doc-hero,.doc-card{box-shadow:none}.doc-container{width:100%;max-width:none}}
   </style>
 <style>
     /* ===== Sticky Requirements Toolbar ===== */
@@ -592,15 +625,15 @@
 </style>
 </head>
 <body>
-  <nav class="navbar bg-dark navbar-dark doc-toolbar">
+  <nav class="navbar doc-toolbar" data-bs-theme="light">
     <div class="container d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
         <img class="logo-img" src="[[LOGO_DATA_URL]]" alt="Logo" onerror="this.style.display='none'">
-        <span class="navbar-brand mb-0 h1">[[PROJECT_NAME_ESC]]</span>
+        <span class="navbar-brand mb-0 h1"><span class="brand-mark">R</span><span>[[PROJECT_NAME_ESC]]</span></span>
       </div>
       <div class="btn-group">
-        <button id="editBtn" type="button" class="btn btn-outline-light"><i class="bi bi-pencil-square"></i> Edit</button>
-        <button id="pdfBtn" type="button" class="btn btn-outline-light"><i class="bi bi-filetype-pdf"></i> Save as PDF</button>
+        <button id="editBtn" type="button" class="btn btn-outline-secondary"><i class="bi bi-pencil-square"></i> Edit</button>
+        <button id="pdfBtn" type="button" class="btn btn-outline-secondary"><i class="bi bi-filetype-pdf"></i> Save as PDF</button>
       </div>
     </div>
   </nav>
@@ -611,14 +644,16 @@
     </div>
   </div>
 
-  <main class="container py-4">
+  <main class="container doc-container py-4">
     <div id="editableRoot" contenteditable="false">
       <div id="content">
-        <header class="mb-4"><h1 class="h3 text-primary">[[PROJECT_NAME_ESC]]</h1></header>
+        <header class="doc-hero"><div class="eyebrow"><i class="bi bi-stars"></i> Requirements preview</div><h1>[[PROJECT_NAME_ESC]]</h1><p class="hero-copy">Review, edit, and export this generated requirements document in the same workspace style as the main page.</p></header>
+        <div class="doc-card">
 
         [[GENERAL_PROJECT_DETAILS_HTML]]
 
         [[WORKPACKAGES_SECTION_HTML]]
+        </div>
       </div>
     </div>
   </main>
