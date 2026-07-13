@@ -585,8 +585,10 @@
     .doc-toolbar .btn,.btn{border-radius:.85rem;text-transform:none;letter-spacing:0;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;min-height:2.45rem;padding:.55rem 1rem}
     .doc-toolbar .btn{border-color:rgba(91,95,199,.18);background:rgba(255,255,255,.82);color:var(--app-ink);box-shadow:0 6px 18px rgba(17,24,39,.05)}
     .doc-toolbar .btn:hover{border-color:rgba(91,95,199,.35);background:rgba(91,95,199,.08);color:var(--bs-primary)}
-    .doc-rte-toolbar{background:rgba(255,255,255,.9);border-bottom:1px solid var(--app-border);box-shadow:0 12px 34px rgba(17,24,39,.07);backdrop-filter:blur(16px)}
+    .doc-rte-toolbar{position:fixed;top:5rem;left:50%;z-index:1030;width:min(92vw,980px);transform:translateX(-50%);border:1px solid var(--app-border);border-radius:1rem;background:rgba(255,255,255,.94);box-shadow:0 18px 48px rgba(17,24,39,.14);backdrop-filter:blur(16px)}
+    .doc-rte-toolbar .container{width:100%;max-width:none;padding-inline:.75rem}
     .rte-toolbar{display:flex;flex-wrap:wrap;gap:.35rem}.rte-toolbar .btn{padding:.25rem .5rem;color:var(--bs-primary);border-color:rgba(91,95,199,.22);background:rgba(91,95,199,.06)}
+    .rte-toolbar .form-select{width:auto;min-height:2.45rem;border-radius:.85rem;font-weight:700;color:var(--app-ink);border-color:rgba(91,95,199,.22);background-color:rgba(255,255,255,.9)}
     .logo-img{height:32px;object-fit:contain}.diagram-img{max-height:45vh;object-fit:contain;border-radius:1rem;box-shadow:0 16px 42px rgba(17,24,39,.07)}
     .doc-hero,.doc-card{border:1px solid var(--app-border);border-radius:1.25rem;background:var(--app-panel);box-shadow:0 18px 50px rgba(17,24,39,.08);backdrop-filter:blur(16px)}
     .doc-hero{margin:1.5rem 0 1.25rem;padding:clamp(1.25rem,2.4vw,2rem)}.eyebrow{display:inline-flex;align-items:center;gap:.4rem;width:fit-content;margin-bottom:.85rem;padding:.38rem .7rem;border-radius:999px;color:#4c1d95;background:rgba(124,58,237,.10);font-size:.74rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
@@ -679,6 +681,24 @@
         + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="formatBlock" data-value="P" title="Paragraph">P</button>'
         + '</div>'
         + '<div class="btn-group me-1">'
+        + '<select class="form-select form-select-sm" data-cmd="fontName" title="Font family" aria-label="Font family">'
+        + '<option value="">Font</option>'
+        + '<option value="Inter, Arial, sans-serif">Inter</option>'
+        + '<option value="Arial, sans-serif">Arial</option>'
+        + '<option value="Georgia, serif">Georgia</option>'
+        + '<option value="Times New Roman, serif">Times</option>'
+        + '<option value="Courier New, monospace">Courier</option>'
+        + '</select>'
+        + '<select class="form-select form-select-sm" data-cmd="fontSize" title="Font size" aria-label="Font size">'
+        + '<option value="">Size</option>'
+        + '<option value="2">Small</option>'
+        + '<option value="3">Normal</option>'
+        + '<option value="4">Large</option>'
+        + '<option value="5">XL</option>'
+        + '<option value="6">XXL</option>'
+        + '</select>'
+        + '</div>'
+        + '<div class="btn-group me-1">'
         + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyLeft" title="Align left"><i class="bi bi-text-left"></i></button>'
         + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyCenter" title="Align center"><i class="bi bi-text-center"></i></button>'
         + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="justifyRight" title="Align right"><i class="bi bi-text-right"></i></button>'
@@ -692,9 +712,7 @@
         + '<button type="button" class="btn btn-sm btn-outline-secondary" data-cmd="createLink" title="Insert link"><i class="bi bi-link-45deg"></i></button>'
         + '</div>';
       container.innerHTML = html;
-      container.addEventListener('click', function(e){
-        var btn = e.target.closest('button'); if(!btn) return;
-        var cmd = btn.getAttribute('data-cmd'); var val = btn.getAttribute('data-value') || null;
+      function runCommand(cmd, val){
         var target = document.getElementById(targetId);
         if(!target){ return; }
         target.focus();
@@ -707,6 +725,15 @@
           return;
         }
         document.execCommand(cmd, false, val);
+      }
+      container.addEventListener('click', function(e){
+        var btn = e.target.closest('button'); if(!btn) return;
+        runCommand(btn.getAttribute('data-cmd'), btn.getAttribute('data-value') || null);
+      });
+      container.addEventListener('change', function(e){
+        var select = e.target.closest('select[data-cmd]'); if(!select || !select.value) return;
+        runCommand(select.getAttribute('data-cmd'), select.value);
+        select.selectedIndex = 0;
       });
     }
 
